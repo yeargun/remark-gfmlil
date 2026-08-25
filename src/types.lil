@@ -1,0 +1,12 @@
+export extern class DataBag {
+  JsValue settings;
+}
+
+export extern class ParseSettings {
+  bool gfm;
+  bool singleTilde;
+}
+
+export extern class GfmOptions {
+  JsValue singleTilde;
+}

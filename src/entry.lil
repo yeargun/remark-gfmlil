@@ -1,0 +1,65 @@
+import { DataBag, ParseSettings, GfmOptions } from "./types.lil";
+
+JsValue emptySettings() {
+  return JS.object();
+}
+
+JsValue ensureBag(JsValue processor) {
+  JsValue existing = processor["data"];
+  string kind = JS.typeOf(existing);
+  if (kind == "function") {
+    JsValue bag = JS.invoke(processor, "data");
+    if (JS.isUndefined(bag) || JS.isNullish(bag)) {
+      return emptySettings();
+    }
+    return bag;
+  }
+  if (kind == "object" && !JS.isNullish(existing)) {
+    return existing;
+  }
+  JsValue store = JS.object();
+  processor["data"] = JS.method0((JsValue _self) => {
+    return store;
+  });
+  return store;
+}
+
+JsValue ensureSettings(JsValue processor) {
+  if (JS.isUndefined(processor) || JS.isNullish(processor)) {
+    return emptySettings();
+  }
+  DataBag bag = JS.assume(ensureBag(processor));
+  JsValue settings = bag.settings;
+  if (JS.isUndefined(settings) || JS.isNullish(settings)) {
+    settings = emptySettings();
+    bag.settings = settings;
+  }
+  return settings;
+}
+
+bool readSingleTilde(JsValue options) {
+  if (JS.isUndefined(options) || JS.isNullish(options)) {
+    return false;
+  }
+  GfmOptions opt = JS.assume(options);
+  JsValue flag = opt.singleTilde;
+  if (flag is bool) {
+    return flag;
+  }
+  return false;
+}
+
+JsValue gfmTransform(JsValue tree, JsValue file) {
+  return tree;
+}
+
+JsValue remarkGfmCall(JsValue self, JsValue options) {
+  ParseSettings settings = JS.assume(ensureSettings(self));
+  settings.gfm = true;
+  settings.singleTilde = readSingleTilde(options);
+  return gfmTransform;
+}
+
+export JsValue remarkGfm = JS.method1(remarkGfmCall);
+
+export JsValue default = remarkGfm;

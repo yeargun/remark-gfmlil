@@ -1,0 +1,67 @@
+{
+  "name": "@itslil/remark-gfm",
+  "version": "4.0.1",
+  "description": "remark-gfm reimplemented in LilScript",
+  "keywords": [
+    "remark",
+    "gfm",
+    "tables",
+    "tasklist",
+    "lilscript",
+    "itslil"
+  ],
+  "homepage": "https://yeargun.github.io/remark-gfmlil/",
+  "bugs": "https://github.com/yeargun/remark-gfmlil/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yeargun/remark-gfmlil.git"
+  },
+  "license": "MIT",
+  "author": "yeargun",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./dist/remark-gfm.cjs",
+  "module": "./dist/remark-gfm.esm.js",
+  "types": "./dist/remark-gfm.d.ts",
+  "unpkg": "./dist/remark-gfm.umd.js",
+  "jsdelivr": "./dist/remark-gfm.umd.js",
+  "exports": {
+    ".": {
+      "types": "./dist/remark-gfm.d.ts",
+      "import": "./dist/remark-gfm.esm.js",
+      "require": "./dist/remark-gfm.cjs",
+      "default": "./dist/remark-gfm.esm.js"
+    },
+    "./closed": "./dist/remark-gfm.closed.js",
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "dist/remark-gfm.esm.js",
+    "dist/remark-gfm.cjs",
+    "dist/remark-gfm.umd.js",
+    "dist/remark-gfm.closed.js",
+    "dist/remark-gfm.d.ts",
+    "LICENSE",
+    "NOTICE.md",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs --compile",
+    "build:site": "node scripts/build-site.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check:site": "npm run build:site && node --test test/site.test.mjs",
+    "check:pack": "node scripts/check-pack.mjs",
+    "prepublishOnly": "npm test && npm run check:pack && npm run check:site"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1"
+  }
+}
