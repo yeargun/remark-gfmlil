@@ -1,0 +1,177 @@
+import { call0, call1, call2, jsString, objGet, objSet, optionOrEmpty, pin, push, undef } from "../host.lil";
+import { normalizeIdentifier } from "../util-normalize-identifier.lil";
+
+JsValue footnoteReferencePeek = JS.method0((JsValue _self) => {
+  return "[";
+});
+
+JsValue footnoteReference = JS.methodRest((JsValue _self, JsValue args) => {
+  JsValue node = args[0];
+  JsValue state = args[2];
+  JsValue info = args[3];
+  JsValue tracker = call1(objGet(state, "createTracker"), state, info);
+  string value = jsString(call1(objGet(tracker, "move"), tracker, "[^"));
+  JsValue exit = call1(objGet(state, "enter"), state, "footnoteReference");
+  JsValue subexit = call1(objGet(state, "enter"), state, "reference");
+  JsValue safeCfg = JS.object();
+  objSet(safeCfg, "after", "]");
+  objSet(safeCfg, "before", value);
+  value = value + jsString(call1(objGet(tracker, "move"), tracker, call2(objGet(state, "safe"), state, call1(objGet(state, "associationId"), state, node), safeCfg)));
+  call0(subexit, undef());
+  call0(exit, undef());
+  value = value + jsString(call1(objGet(tracker, "move"), tracker, "]"));
+  return value;
+});
+JS.set(footnoteReference, "peek", footnoteReferencePeek);
+
+JsValue mapAll = JS.methodRest((JsValue _self, JsValue args) => {
+  string line = jsString(args[0]);
+  bool blank = args[2].truthy();
+  if (blank) {
+    return line;
+  }
+  return "    " + line;
+});
+
+JsValue mapExceptFirst = JS.methodRest((JsValue _self, JsValue args) => {
+  string line = jsString(args[0]);
+  int index = 0;
+  if (JS.typeOf(args[1]) == "number") {
+    index = JS.number(args[1]).toInt();
+  }
+  if (index == 0) {
+    return line;
+  }
+  bool blank = args[2].truthy();
+  if (blank) {
+    return line;
+  }
+  return "    " + line;
+});
+
+JsValue enterFootnoteCallString = JS.method1((JsValue self, JsValue _token) => {
+  call0(objGet(self, "buffer"), self);
+  return undef();
+});
+
+JsValue enterFootnoteCall = JS.method1((JsValue self, JsValue token) => {
+  JsValue node = JS.object();
+  objSet(node, "type", "footnoteReference");
+  objSet(node, "identifier", "");
+  objSet(node, "label", "");
+  objSet(node, "position", undef());
+  call2(objGet(self, "enter"), self, node, token);
+  return undef();
+});
+
+JsValue enterFootnoteDefinitionLabelString = JS.method1((JsValue self, JsValue _token) => {
+  call0(objGet(self, "buffer"), self);
+  return undef();
+});
+
+JsValue enterFootnoteDefinition = JS.method1((JsValue self, JsValue token) => {
+  JsValue node = JS.object();
+  objSet(node, "type", "footnoteDefinition");
+  objSet(node, "identifier", "");
+  objSet(node, "label", "");
+  objSet(node, "children", JS.array());
+  objSet(node, "position", undef());
+  call2(objGet(self, "enter"), self, node, token);
+  return undef();
+});
+
+JsValue exitFootnoteCallString = JS.method1((JsValue self, JsValue token) => {
+  JsValue label = call0(objGet(self, "resume"), self);
+  JsValue stack = objGet(self, "stack");
+  JsValue node = stack[JS.number(JS.get(stack, "length")).toInt() - 1];
+  objSet(node, "identifier", normalizeIdentifier(jsString(JS.call(objGet(self, "sliceSerialize"), self, token))).toLowerCase());
+  objSet(node, "label", label);
+  return undef();
+});
+
+JsValue exitFootnoteCall = JS.method1((JsValue self, JsValue token) => {
+  call1(objGet(self, "exit"), self, token);
+  return undef();
+});
+
+JsValue exitFootnoteDefinitionLabelString = JS.method1((JsValue self, JsValue token) => {
+  JsValue label = call0(objGet(self, "resume"), self);
+  JsValue stack = objGet(self, "stack");
+  JsValue node = stack[JS.number(JS.get(stack, "length")).toInt() - 1];
+  objSet(node, "identifier", normalizeIdentifier(jsString(JS.call(objGet(self, "sliceSerialize"), self, token))).toLowerCase());
+  objSet(node, "label", label);
+  return undef();
+});
+
+JsValue exitFootnoteDefinition = JS.method1((JsValue self, JsValue token) => {
+  call1(objGet(self, "exit"), self, token);
+  return undef();
+});
+
+export JsValue gfmFootnoteFromMarkdown() {
+  JsValue enter = JS.object();
+  pin(enter, "gfmFootnoteCallString", enterFootnoteCallString);
+  pin(enter, "gfmFootnoteCall", enterFootnoteCall);
+  pin(enter, "gfmFootnoteDefinitionLabelString", enterFootnoteDefinitionLabelString);
+  pin(enter, "gfmFootnoteDefinition", enterFootnoteDefinition);
+  JsValue exit = JS.object();
+  pin(exit, "gfmFootnoteCallString", exitFootnoteCallString);
+  pin(exit, "gfmFootnoteCall", exitFootnoteCall);
+  pin(exit, "gfmFootnoteDefinitionLabelString", exitFootnoteDefinitionLabelString);
+  pin(exit, "gfmFootnoteDefinition", exitFootnoteDefinition);
+  JsValue ext = JS.object();
+  pin(ext, "enter", enter);
+  pin(ext, "exit", exit);
+  return ext;
+}
+
+export JsValue gfmFootnoteToMarkdown(JsValue options) {
+  bool firstLineBlank = false;
+  if (options.truthy() && objGet(options, "firstLineBlank").truthy()) {
+    firstLineBlank = true;
+  }
+  JsValue footnoteDefinition = JS.methodRest((JsValue _self, JsValue args) => {
+    JsValue node = args[0];
+    JsValue state = args[2];
+    JsValue info = args[3];
+    JsValue tracker = call1(objGet(state, "createTracker"), state, info);
+    string value = jsString(call1(objGet(tracker, "move"), tracker, "[^"));
+    JsValue exit = call1(objGet(state, "enter"), state, "footnoteDefinition");
+    JsValue subexit = call1(objGet(state, "enter"), state, "label");
+    JsValue safeCfg = JS.object();
+    objSet(safeCfg, "before", value);
+    objSet(safeCfg, "after", "]");
+    value = value + jsString(call1(objGet(tracker, "move"), tracker, call2(objGet(state, "safe"), state, call1(objGet(state, "associationId"), state, node), safeCfg)));
+    call0(subexit, undef());
+    value = value + jsString(call1(objGet(tracker, "move"), tracker, "]:"));
+    JsValue children = objGet(node, "children");
+    if (children.truthy() && JS.number(JS.get(children, "length")).toInt() > 0) {
+      call1(objGet(tracker, "shift"), tracker, 4);
+      string prefix = " ";
+      JsValue mapper = mapExceptFirst;
+      if (firstLineBlank) {
+        prefix = "\n";
+        mapper = mapAll;
+      }
+      value = value + jsString(call1(objGet(tracker, "move"), tracker, prefix + jsString(call2(objGet(state, "indentLines"), state, call2(objGet(state, "containerFlow"), state, node, call0(objGet(tracker, "current"), tracker)), mapper))));
+    }
+    call0(exit, undef());
+    return value;
+  });
+  JsValue handlers = JS.object();
+  pin(handlers, "footnoteDefinition", footnoteDefinition);
+  pin(handlers, "footnoteReference", footnoteReference);
+  JsValue unsafe = JS.array();
+  JsValue u = JS.object();
+  objSet(u, "character", "[");
+  JsValue inConstruct = JS.array();
+  push(inConstruct, "label");
+  push(inConstruct, "phrasing");
+  push(inConstruct, "reference");
+  objSet(u, "inConstruct", inConstruct);
+  push(unsafe, u);
+  JsValue ext = JS.object();
+  pin(ext, "handlers", handlers);
+  pin(ext, "unsafe", unsafe);
+  return ext;
+}

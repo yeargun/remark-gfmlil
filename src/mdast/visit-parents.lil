@@ -1,0 +1,84 @@
+import { arrLen, childCount, copyParents, isNullish, jsInt, stringField, undef } from "../host.lil";
+
+JsValue emptyResult() {
+  return JS.object("action", undef(), "offset", undef());
+}
+
+JsValue toResult(JsValue value) {
+  if (value.isArray()) {
+    JsValue action = undef();
+    JsValue offset = undef();
+    if (arrLen(value) > 0) {
+      action = value[0];
+    }
+    if (arrLen(value) > 1) {
+      offset = value[1];
+    }
+    return JS.object("action", action, "offset", offset);
+  }
+  if (JS.typeOf(value) == "number") {
+    return JS.object("action", true, "offset", value);
+  }
+  if (JS.isUndefined(value) || JS.isNullish(value)) {
+    return emptyResult();
+  }
+  return JS.object("action", value, "offset", undef());
+}
+
+bool isExit(JsValue result) {
+  JsValue action = JS.get(result, "action");
+  if (action is bool) {
+    return !action;
+  }
+  return false;
+}
+
+bool isSkip(JsValue result) {
+  JsValue action = JS.get(result, "action");
+  if (action is string) {
+    return action == "skip";
+  }
+  return false;
+}
+
+bool typeMatches(JsValue node, string testType) {
+  if (testType.length == 0) {
+    return true;
+  }
+  return stringField(node, "type") == testType;
+}
+
+JsValue walk(JsValue node, JsValue parents, string testType, JsValue visitor) {
+  JsValue result = emptyResult();
+  if (typeMatches(node, testType)) {
+    result = toResult(JS.call(visitor, undef(), node, parents));
+    if (isExit(result)) {
+      return result;
+    }
+  }
+  JsValue kids = JS.get(node, "children");
+  if (kids.isArray() && !isSkip(result)) {
+    JsValue grandparents = copyParents(parents, node);
+    int offset = 0;
+    int n = childCount(kids);
+    while (offset >= 0 && offset < n) {
+      JsValue child = kids[offset];
+      JsValue sub = walk(child, grandparents, testType, visitor);
+      if (isExit(sub)) {
+        return sub;
+      }
+      JsValue next = JS.get(sub, "offset");
+      if (JS.typeOf(next) == "number") {
+        offset = jsInt(next);
+      } else {
+        offset = offset + 1;
+      }
+      n = childCount(kids);
+    }
+  }
+  return result;
+}
+
+export void visitParents(JsValue tree, string testType, JsValue visitor) {
+  walk(tree, JS.array(), testType, visitor);
+}

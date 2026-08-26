@@ -1,0 +1,164 @@
+import { arrLen, call1, copyPoint, eventEnter, eventExit, fxConsume, fxEnter, fxExit, go, isNullish, jsInt, nullMap, objGet, objSet, optionOrEmpty, pin, pinCode, push, slice2, toJsBool, undef } from "../host.lil";
+import { splice } from "../util-chunked.lil";
+import { classifyCharacter } from "../util-classify-character.lil";
+import { resolveAll } from "../util-resolve-all.lil";
+import { cTilde, codeEq } from "../symbol/codes.lil";
+import { kAttentionSideAfter } from "../symbol/constants.lil";
+import { tCharacterEscape, tData } from "../symbol/types.lil";
+
+export JsValue gfmStrikethrough(JsValue options) {
+  JsValue options_ = optionOrEmpty(options);
+  JsValue singleVal = objGet(options_, "singleTilde");
+  bool single = true;
+  if (!isNullish(singleVal)) {
+    single = singleVal.truthy();
+  }
+
+  JsValue resolveAllStrikethrough = JS.method2((JsValue _self, JsValue events, JsValue context) => {
+    int index = -1;
+    int n = arrLen(events);
+    while (true) {
+      index = index + 1;
+      if (index >= n) {
+        break;
+      }
+      if (events[index][0] == "enter" && objGet(events[index][1], "type") == "strikethroughSequenceTemporary" && objGet(events[index][1], "_close").truthy()) {
+        int open = index;
+        while (true) {
+          open = open - 1;
+          if (open < 0) {
+            break;
+          }
+          if (events[open][0] == "exit" && objGet(events[open][1], "type") == "strikethroughSequenceTemporary" && objGet(events[open][1], "_open").truthy()) {
+            int closeSize = jsInt(objGet(objGet(events[index][1], "end"), "offset")) - jsInt(objGet(objGet(events[index][1], "start"), "offset"));
+            int openSize = jsInt(objGet(objGet(events[open][1], "end"), "offset")) - jsInt(objGet(objGet(events[open][1], "start"), "offset"));
+            if (closeSize == openSize) {
+              objSet(events[index][1], "type", "strikethroughSequence");
+              objSet(events[open][1], "type", "strikethroughSequence");
+              JsValue strikethrough = JS.object();
+              objSet(strikethrough, "type", "strikethrough");
+              objSet(strikethrough, "start", copyPoint(objGet(events[open][1], "start")));
+              objSet(strikethrough, "end", copyPoint(objGet(events[index][1], "end")));
+              JsValue text = JS.object();
+              objSet(text, "type", "strikethroughText");
+              objSet(text, "start", copyPoint(objGet(events[open][1], "end")));
+              objSet(text, "end", copyPoint(objGet(events[index][1], "start")));
+              JsValue nextEvents = JS.array();
+              push(nextEvents, eventEnter(strikethrough, context));
+              push(nextEvents, eventEnter(events[open][1], context));
+              push(nextEvents, eventExit(events[open][1], context));
+              push(nextEvents, eventEnter(text, context));
+              JsValue insideSpan = objGet(objGet(objGet(context, "parser"), "constructs"), "insideSpan");
+              JsValue inside = undef();
+              if (!isNullish(insideSpan)) {
+                inside = objGet(insideSpan, "null");
+              }
+              if (inside.truthy()) {
+                splice(nextEvents, arrLen(nextEvents), 0, resolveAll(inside, slice2(events, open + 1, index), context));
+              }
+              JsValue closing = JS.array();
+              push(closing, eventExit(text, context));
+              push(closing, eventEnter(events[index][1], context));
+              push(closing, eventExit(events[index][1], context));
+              push(closing, eventExit(strikethrough, context));
+              splice(nextEvents, arrLen(nextEvents), 0, closing);
+              splice(events, open - 1, index - open + 3, nextEvents);
+              n = arrLen(events);
+              index = open + arrLen(nextEvents) - 2;
+              break;
+            }
+          }
+        }
+      }
+    }
+    index = -1;
+    n = arrLen(events);
+    while (true) {
+      index = index + 1;
+      if (index >= n) {
+        break;
+      }
+      if (objGet(events[index][1], "type") == "strikethroughSequenceTemporary") {
+        objSet(events[index][1], "type", tData);
+      }
+    }
+    return events;
+  });
+
+  JsValue tokenizeStrikethrough = JS.method3((JsValue self, JsValue effects, JsValue ok, JsValue nok) => {
+    JsValue previous = objGet(self, "previous");
+    JsValue events = objGet(self, "events");
+    JsValue st = JS.object();
+    objSet(st, "size", 0);
+
+    JsValue more = JS.method1((JsValue _s, JsValue code) => {
+      JsValue before = classifyCharacter(previous);
+      if (codeEq(code, cTilde)) {
+        if (jsInt(objGet(st, "size")) > 1) {
+          return go(nok, code);
+        }
+        fxConsume(effects, code);
+        objSet(st, "size", jsInt(objGet(st, "size")) + 1);
+        return objGet(st, "more");
+      }
+      if (jsInt(objGet(st, "size")) < 2 && !single) {
+        return go(nok, code);
+      }
+      JsValue token = fxExit(effects, "strikethroughSequenceTemporary");
+      JsValue after = classifyCharacter(code);
+      bool open = !after.truthy();
+      if (after.truthy() && jsInt(after) == kAttentionSideAfter && before.truthy()) {
+        open = true;
+      }
+      bool close = !before.truthy();
+      if (before.truthy() && jsInt(before) == kAttentionSideAfter && after.truthy()) {
+        close = true;
+      }
+      objSet(token, "_open", toJsBool(open));
+      objSet(token, "_close", toJsBool(close));
+      return go(ok, code);
+    });
+    objSet(st, "more", more);
+
+    JsValue start = JS.method1((JsValue _s, JsValue code) => {
+      if (codeEq(previous, cTilde) && arrLen(events) > 0 && objGet(events[arrLen(events) - 1][1], "type") != tCharacterEscape) {
+        return go(nok, code);
+      }
+      fxEnter(effects, "strikethroughSequenceTemporary");
+      return go(more, code);
+    });
+    return start;
+  });
+
+  JsValue tokenizer = JS.object("name", "strikethrough", "tokenize", tokenizeStrikethrough, "resolveAll", resolveAllStrikethrough);
+
+  JsValue text = JS.object();
+  pinCode(text, cTilde, tokenizer);
+  JsValue inside = JS.array();
+  push(inside, tokenizer);
+  JsValue markers = JS.array();
+  push(markers, cTilde);
+
+  JsValue ext = JS.object();
+  pin(ext, "text", text);
+  pin(ext, "insideSpan", nullMap(inside));
+  pin(ext, "attentionMarkers", nullMap(markers));
+  return ext;
+}
+
+export JsValue gfmStrikethroughHtml() {
+  JsValue enter = JS.object();
+  pin(enter, "strikethrough", JS.method0((JsValue self) => {
+    call1(objGet(self, "tag"), self, "<del>");
+    return undef();
+  }));
+  JsValue exit = JS.object();
+  pin(exit, "strikethrough", JS.method0((JsValue self) => {
+    call1(objGet(self, "tag"), self, "</del>");
+    return undef();
+  }));
+  JsValue html = JS.object();
+  pin(html, "enter", enter);
+  pin(html, "exit", exit);
+  return html;
+}

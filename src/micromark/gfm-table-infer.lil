@@ -1,0 +1,41 @@
+import { arrLen, objGet, push } from "../host.lil";
+
+export JsValue gfmTableAlign(JsValue events, int index) {
+  bool inDelimiterRow = false;
+  JsValue align = JS.array();
+  int n = arrLen(events);
+  while (index < n) {
+    JsValue event = events[index];
+    string typ = JS.string(objGet(event[1], "type"));
+    if (inDelimiterRow) {
+      if (event[0] == "enter") {
+        if (typ == "tableContent") {
+          string nextTyp = JS.string(objGet(events[index + 1][1], "type"));
+          if (nextTyp == "tableDelimiterMarker") {
+            push(align, "left");
+          } else {
+            push(align, "none");
+          }
+        }
+      } else {
+        if (typ == "tableContent") {
+          string prevTyp = JS.string(objGet(events[index - 1][1], "type"));
+          if (prevTyp == "tableDelimiterMarker") {
+            int alignIndex = arrLen(align) - 1;
+            if (align[alignIndex] == "left") {
+              align[alignIndex] = "center";
+            } else {
+              align[alignIndex] = "right";
+            }
+          }
+        } else if (typ == "tableDelimiterRow") {
+          break;
+        }
+      }
+    } else if (event[0] == "enter" && typ == "tableDelimiterRow") {
+      inDelimiterRow = true;
+    }
+    index = index + 1;
+  }
+  return align;
+}

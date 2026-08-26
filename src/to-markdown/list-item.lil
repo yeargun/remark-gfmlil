@@ -1,0 +1,65 @@
+import { call0, call1, call2, isNum, jsInt, jsString, mathCeil, objGet, indexOfNode, repeatChar, undef } from "../host.lil";
+import { checkBullet } from "./check-bullet.lil";
+import { checkListItemIndent } from "./check-list-item-indent.lil";
+
+export JsValue listItem = JS.methodRest((JsValue _self, JsValue args) => {
+  JsValue node = args[0];
+  JsValue parent = args[1];
+  JsValue state = args[2];
+  JsValue info = args[3];
+  string listItemIndent = checkListItemIndent(state);
+  string bullet = checkBullet(state);
+  JsValue current = objGet(state, "bulletCurrent");
+  if (current.truthy()) {
+    bullet = jsString(current);
+  }
+  if (parent.truthy() && objGet(parent, "type") == "list" && objGet(parent, "ordered").truthy()) {
+    int start = 1;
+    JsValue startVal = objGet(parent, "start");
+    if ((startVal is float || isNum(startVal)) && jsInt(startVal) > -1) {
+      start = jsInt(startVal);
+    }
+    int increment = indexOfNode(objGet(parent, "children"), node);
+    if (objGet(objGet(state, "options"), "incrementListMarker") == false) {
+      increment = 0;
+    }
+    bullet = jsString(start + increment) + bullet;
+  }
+  int size = bullet.length + 1;
+  bool useTab = listItemIndent == "tab";
+  if (!useTab && listItemIndent == "mixed") {
+    bool spread = false;
+    if (parent.truthy() && objGet(parent, "type") == "list" && objGet(parent, "spread").truthy()) {
+      spread = true;
+    }
+    if (objGet(node, "spread").truthy()) {
+      spread = true;
+    }
+    useTab = spread;
+  }
+  if (useTab) {
+    size = mathCeil(JS.number(size) / 4.0).toInt() * 4;
+  }
+  JsValue tracker = call1(objGet(state, "createTracker"), state, info);
+  call1(objGet(tracker, "move"), tracker, bullet + repeatChar(" ", size - bullet.length));
+  call1(objGet(tracker, "shift"), tracker, size);
+  JsValue exit = call1(objGet(state, "enter"), state, "listItem");
+  JsValue map = JS.methodRest((JsValue _s, JsValue mapArgs) => {
+    string line = jsString(mapArgs[0]);
+    int index = jsInt(mapArgs[1]);
+    bool blank = mapArgs[2].truthy();
+    if (index != 0) {
+      if (blank) {
+        return line;
+      }
+      return repeatChar(" ", size) + line;
+    }
+    if (blank) {
+      return bullet + line;
+    }
+    return bullet + repeatChar(" ", size - bullet.length) + line;
+  });
+  string value = jsString(call2(objGet(state, "indentLines"), state, call2(objGet(state, "containerFlow"), state, node, call0(objGet(tracker, "current"), tracker)), map));
+  call0(exit, undef());
+  return value;
+});

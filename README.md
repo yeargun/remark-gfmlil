@@ -1,6 +1,6 @@
 # @itslil/remark-gfm
 
-remark-gfm reimplemented in LilScript. This is **not** the official [`remark-gfm`](https://github.com/remarkjs/remark-gfm) package.
+Official [`remark-gfm@4.0.1`](https://github.com/remarkjs/remark-gfm) algorithms rewritten in LilScript — a real micromark/mdast extension plugin. Official test suite 18/18. Not affiliated with upstream.
 
 **Site:** [yeargun.github.io/remark-gfmlil/](https://yeargun.github.io/remark-gfmlil/)
 

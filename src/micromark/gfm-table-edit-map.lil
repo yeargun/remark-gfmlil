@@ -1,0 +1,89 @@
+import { arrLen, jsInt, objGet, objSet, push, slice1, slice2, undef } from "../host.lil";
+
+void addImplementation(JsValue editMap, int at, int remove, JsValue add) {
+  if (remove == 0 && arrLen(add) == 0) {
+    return;
+  }
+  JsValue map = objGet(editMap, "map");
+  int index = 0;
+  int n = arrLen(map);
+  while (index < n) {
+    if (jsInt(map[index][0]) == at) {
+      map[index][1] = jsInt(map[index][1]) + remove;
+      JsValue existing = map[index][2];
+      int ai = 0;
+      int an = arrLen(add);
+      while (ai < an) {
+        push(existing, add[ai]);
+        ai = ai + 1;
+      }
+      return;
+    }
+    index = index + 1;
+  }
+  JsValue row = JS.array();
+  push(row, at);
+  push(row, remove);
+  push(row, add);
+  push(map, row);
+}
+
+void sortMap(JsValue list) {
+  int n = arrLen(list);
+  int i = 1;
+  while (i < n) {
+    JsValue key = list[i];
+    int j = i - 1;
+    while (j >= 0 && jsInt(list[j][0]) > jsInt(key[0])) {
+      list[j + 1] = list[j];
+      j = j - 1;
+    }
+    list[j + 1] = key;
+    i = i + 1;
+  }
+}
+
+void consumeMap(JsValue editMap, JsValue events) {
+  JsValue map = objGet(editMap, "map");
+  sortMap(map);
+  if (arrLen(map) == 0) {
+    return;
+  }
+  int index = arrLen(map);
+  JsValue vecs = JS.array();
+  while (index > 0) {
+    index = index - 1;
+    int at = jsInt(map[index][0]);
+    int remove = jsInt(map[index][1]);
+    push(vecs, slice1(events, at + remove));
+    push(vecs, map[index][2]);
+    objSet(events, "length", at);
+  }
+  push(vecs, slice1(events, 0));
+  objSet(events, "length", 0);
+  JsValue piece = JS.call(JS.get(vecs, "pop"), vecs);
+  while (piece.truthy()) {
+    int ei = 0;
+    int en = arrLen(piece);
+    while (ei < en) {
+      push(events, piece[ei]);
+      ei = ei + 1;
+    }
+    piece = JS.call(JS.get(vecs, "pop"), vecs);
+  }
+  objSet(map, "length", 0);
+}
+
+export JsValue createEditMap() {
+  JsValue self = JS.object();
+  objSet(self, "map", JS.array());
+  objSet(self, "add", JS.method3((JsValue _s, JsValue index, JsValue remove, JsValue add) => {
+    addImplementation(self, jsInt(index), jsInt(remove), add);
+    return undef();
+  }));
+  objSet(self, "consume", JS.method1((JsValue _s, JsValue events) => {
+    consumeMap(self, events);
+    return undef();
+  }));
+  return self;
+}

@@ -1,0 +1,56 @@
+import { arrLen, jsInt, jsString, objGet, undef } from "../host.lil";
+
+JsValue inlineCodePeek = JS.method0((JsValue _self) => {
+  return "`";
+});
+
+export JsValue inlineCode = JS.methodRest((JsValue _self, JsValue args) => {
+  JsValue node = args[0];
+  JsValue state = args[2];
+  string value = "";
+  JsValue raw = objGet(node, "value");
+  if (raw.truthy()) {
+    value = jsString(raw);
+  }
+  string sequence = "`";
+  while (true) {
+    Regex probe = new Regex("(^|[^`])" + sequence + "([^`]|$)", "");
+    if (!probe.test(value)) {
+      break;
+    }
+    sequence = sequence + "`";
+  }
+  Regex nonSpace = new Regex("[^ \\r\\n]", "");
+  Regex lead = new Regex("^[ \\r\\n]", "");
+  Regex trail = new Regex("[ \\r\\n]$", "");
+  Regex ticks = new Regex("^`|`$", "");
+  if (nonSpace.test(value) && ((lead.test(value) && trail.test(value)) || ticks.test(value))) {
+    value = " " + value + " ";
+  }
+  int index = -1;
+  JsValue unsafe = objGet(state, "unsafe");
+  int n = arrLen(unsafe);
+  while (true) {
+    index = index + 1;
+    if (index >= n) {
+      break;
+    }
+    JsValue pattern = unsafe[index];
+    if (!objGet(pattern, "atBreak").truthy()) {
+      continue;
+    }
+    JsValue expression = JS.call(objGet(state, "compilePattern"), state, pattern);
+    JsValue found = JS.call(objGet(expression, "exec"), expression, value);
+    while (found.truthy()) {
+      int position = jsInt(objGet(found, "index"));
+      if (value.charCodeAt(position) == 10 && position > 0 && value.charCodeAt(position - 1) == 13) {
+        position = position - 1;
+      }
+      value = value.slice(0, position) + " " + value.slice(jsInt(objGet(found, "index")) + 1);
+      found = JS.call(objGet(expression, "exec"), expression, value);
+    }
+  }
+  return sequence + value + sequence;
+});
+
+JS.set(inlineCode, "peek", inlineCodePeek);

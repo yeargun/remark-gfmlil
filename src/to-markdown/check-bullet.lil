@@ -1,0 +1,13 @@
+import { fail, jsString, objGet } from "../host.lil";
+
+export string checkBullet(JsValue state) {
+  JsValue marker = objGet(objGet(state, "options"), "bullet");
+  string value = "*";
+  if (marker.truthy()) {
+    value = jsString(marker);
+  }
+  if (value != "*" && value != "+" && value != "-") {
+    fail("Cannot serialize items with `" + value + "` for `options.bullet`, expected `*`, `+`, or `-`");
+  }
+  return value;
+}

@@ -1,0 +1,318 @@
+import { arrLen, call2, copyPoint, eventEnter, eventExit, fxAttempt, fxCheck, fxConsume, fxEnter, fxExit, go, includesVal, isEof, isNullish, jsInt, jsString, nowOf, objGet, objSet, pin, pinCode, push, setTokenType, sliceSer, undef } from "../host.lil";
+import { splice } from "../util-chunked.lil";
+import { factorySpace } from "../factory-space.lil";
+import { markdownLineEndingOrSpace } from "../util-character.lil";
+import { normalizeIdentifier } from "../util-normalize-identifier.lil";
+import { blankLine } from "../core/blank-line.lil";
+import { cBackslash, cCaret, cColon, cLeftSquareBracket, cRightSquareBracket, codeEq } from "../symbol/codes.lil";
+import { kLinkReferenceSizeMax, kTabSize } from "../symbol/constants.lil";
+import { tChunkString, tData, tImage, tLabel, tLabelImage, tLabelLink, tLink } from "../symbol/types.lil";
+
+JsValue gfmFootnotesOf(JsValue self) {
+  JsValue parser = objGet(self, "parser");
+  JsValue defined = objGet(parser, "gfmFootnotes");
+  if (isNullish(defined)) {
+    defined = JS.array();
+    objSet(parser, "gfmFootnotes", defined);
+  }
+  return defined;
+}
+
+JsValue tokenizeIndent = JS.method3((JsValue self, JsValue effects, JsValue ok, JsValue nok) => {
+  JsValue afterPrefix = JS.method1((JsValue _s, JsValue code) => {
+    JsValue evs = objGet(self, "events");
+    JsValue tail = evs[arrLen(evs) - 1];
+    if (tail.truthy() && objGet(tail[1], "type") == "gfmFootnoteDefinitionIndent") {
+      string ser = jsString(call2(objGet(tail[2], "sliceSerialize"), tail[2], tail[1], true));
+      if (ser.length == kTabSize) {
+        return go(ok, code);
+      }
+    }
+    return go(nok, code);
+  });
+  return factorySpace(effects, afterPrefix, "gfmFootnoteDefinitionIndent", kTabSize + 1);
+});
+
+JsValue indent = JS.object();
+objSet(indent, "tokenize", tokenizeIndent);
+objSet(indent, "partial", true);
+
+JsValue gfmFootnoteDefinitionEnd = JS.method1((JsValue _self, JsValue effects) => {
+  fxExit(effects, "gfmFootnoteDefinition");
+  return undef();
+});
+
+JsValue tokenizeDefinitionContinuation = JS.method3((JsValue _self, JsValue effects, JsValue ok, JsValue nok) => {
+  return fxCheck(effects, blankLine, ok, fxAttempt(effects, indent, ok, nok));
+});
+
+JsValue tokenizePotentialGfmFootnoteCall = JS.method3((JsValue self, JsValue effects, JsValue ok, JsValue nok) => {
+  JsValue defined = gfmFootnotesOf(self);
+  int index = arrLen(objGet(self, "events"));
+  JsValue labelStart = undef();
+  while (true) {
+    index = index - 1;
+    if (index < 0) {
+      break;
+    }
+    JsValue token = objGet(self, "events")[index][1];
+    string typ = jsString(objGet(token, "type"));
+    if (typ == tLabelImage) {
+      labelStart = token;
+      break;
+    }
+    if (typ == "gfmFootnoteCall" || typ == tLabelLink || typ == tLabel || typ == tImage || typ == tLink) {
+      break;
+    }
+  }
+  JsValue start = JS.method1((JsValue _s, JsValue code) => {
+    if (isNullish(labelStart) || !objGet(labelStart, "_balanced").truthy()) {
+      return go(nok, code);
+    }
+    JsValue span = JS.object();
+    objSet(span, "start", objGet(labelStart, "end"));
+    objSet(span, "end", nowOf(self));
+    string id = normalizeIdentifier(jsString(sliceSer(self, span)));
+    if (id.charCodeAt(0) != cCaret || !includesVal(defined, id.slice(1))) {
+      return go(nok, code);
+    }
+    fxEnter(effects, "gfmFootnoteCallLabelMarker");
+    fxConsume(effects, code);
+    fxExit(effects, "gfmFootnoteCallLabelMarker");
+    return go(ok, code);
+  });
+  return start;
+});
+
+JsValue resolveToPotentialGfmFootnoteCall = JS.method2((JsValue _self, JsValue events, JsValue context) => {
+  int index = arrLen(events);
+  JsValue labelStart = undef();
+  while (true) {
+    index = index - 1;
+    if (index < 0) {
+      break;
+    }
+    if (objGet(events[index][1], "type") == tLabelImage && events[index][0] == "enter") {
+      labelStart = events[index][1];
+      break;
+    }
+  }
+  setTokenType(events[index + 1][1], tData);
+  objSet(events[index + 3][1], "type", "gfmFootnoteCallLabelMarker");
+  JsValue call = JS.object();
+  objSet(call, "type", "gfmFootnoteCall");
+  objSet(call, "start", copyPoint(objGet(events[index + 3][1], "start")));
+  objSet(call, "end", copyPoint(objGet(events[arrLen(events) - 1][1], "end")));
+  JsValue marker = JS.object();
+  objSet(marker, "type", "gfmFootnoteCallMarker");
+  objSet(marker, "start", copyPoint(objGet(events[index + 3][1], "end")));
+  objSet(marker, "end", copyPoint(objGet(events[index + 3][1], "end")));
+  JsValue markerEnd = objGet(marker, "end");
+  objSet(markerEnd, "column", jsInt(objGet(markerEnd, "column")) + 1);
+  objSet(markerEnd, "offset", jsInt(objGet(markerEnd, "offset")) + 1);
+  objSet(markerEnd, "_bufferIndex", JS.number(objGet(markerEnd, "_bufferIndex")) + 1.0);
+  JsValue stringTok = JS.object();
+  objSet(stringTok, "type", "gfmFootnoteCallString");
+  objSet(stringTok, "start", copyPoint(objGet(marker, "end")));
+  objSet(stringTok, "end", copyPoint(objGet(events[arrLen(events) - 1][1], "start")));
+  JsValue chunk = JS.object();
+  objSet(chunk, "type", tChunkString);
+  objSet(chunk, "contentType", "string");
+  objSet(chunk, "start", copyPoint(objGet(stringTok, "start")));
+  objSet(chunk, "end", copyPoint(objGet(stringTok, "end")));
+  JsValue replacement = JS.array();
+  push(replacement, events[index + 1]);
+  push(replacement, events[index + 2]);
+  push(replacement, eventEnter(call, context));
+  push(replacement, events[index + 3]);
+  push(replacement, events[index + 4]);
+  push(replacement, eventEnter(marker, context));
+  push(replacement, eventExit(marker, context));
+  push(replacement, eventEnter(stringTok, context));
+  push(replacement, eventEnter(chunk, context));
+  push(replacement, eventExit(chunk, context));
+  push(replacement, eventExit(stringTok, context));
+  push(replacement, events[arrLen(events) - 2]);
+  push(replacement, events[arrLen(events) - 1]);
+  push(replacement, eventExit(call, context));
+  splice(events, index, arrLen(events) - index + 1, replacement);
+  return events;
+});
+
+JsValue tokenizeGfmFootnoteCall = JS.method3((JsValue self, JsValue effects, JsValue ok, JsValue nok) => {
+  JsValue defined = gfmFootnotesOf(self);
+  JsValue st = JS.object();
+  objSet(st, "size", 0);
+  objSet(st, "data", false);
+
+  JsValue callEscape = JS.method1((JsValue _s, JsValue code) => {
+    if (codeEq(code, cLeftSquareBracket) || codeEq(code, cBackslash) || codeEq(code, cRightSquareBracket)) {
+      fxConsume(effects, code);
+      objSet(st, "size", jsInt(objGet(st, "size")) + 1);
+      return objGet(st, "callData");
+    }
+    return go(objGet(st, "callData"), code);
+  });
+
+  JsValue callData = JS.method1((JsValue _s, JsValue code) => {
+    int size = jsInt(objGet(st, "size"));
+    if (size > kLinkReferenceSizeMax || (codeEq(code, cRightSquareBracket) && !objGet(st, "data").truthy()) || isEof(code) || codeEq(code, cLeftSquareBracket) || markdownLineEndingOrSpace(code)) {
+      return go(nok, code);
+    }
+    if (codeEq(code, cRightSquareBracket)) {
+      fxExit(effects, tChunkString);
+      JsValue token = fxExit(effects, "gfmFootnoteCallString");
+      if (!includesVal(defined, normalizeIdentifier(jsString(sliceSer(self, token))))) {
+        return go(nok, code);
+      }
+      fxEnter(effects, "gfmFootnoteCallLabelMarker");
+      fxConsume(effects, code);
+      fxExit(effects, "gfmFootnoteCallLabelMarker");
+      fxExit(effects, "gfmFootnoteCall");
+      return ok;
+    }
+    if (!markdownLineEndingOrSpace(code)) {
+      objSet(st, "data", true);
+    }
+    objSet(st, "size", size + 1);
+    fxConsume(effects, code);
+    if (codeEq(code, cBackslash)) {
+      return callEscape;
+    }
+    return objGet(st, "callData");
+  });
+  objSet(st, "callData", callData);
+
+  JsValue callStart = JS.method1((JsValue _s, JsValue code) => {
+    if (!codeEq(code, cCaret)) {
+      return go(nok, code);
+    }
+    fxEnter(effects, "gfmFootnoteCallMarker");
+    fxConsume(effects, code);
+    fxExit(effects, "gfmFootnoteCallMarker");
+    fxEnter(effects, "gfmFootnoteCallString");
+    JsValue chunk = fxEnter(effects, tChunkString);
+    objSet(chunk, "contentType", "string");
+    return callData;
+  });
+
+  JsValue start = JS.method1((JsValue _s, JsValue code) => {
+    fxEnter(effects, "gfmFootnoteCall");
+    fxEnter(effects, "gfmFootnoteCallLabelMarker");
+    fxConsume(effects, code);
+    fxExit(effects, "gfmFootnoteCallLabelMarker");
+    return callStart;
+  });
+  return start;
+});
+
+JsValue tokenizeDefinitionStart = JS.method3((JsValue self, JsValue effects, JsValue ok, JsValue nok) => {
+  JsValue defined = gfmFootnotesOf(self);
+  JsValue st = JS.object();
+  objSet(st, "size", 0);
+  objSet(st, "data", false);
+  objSet(st, "identifier", "");
+
+  JsValue whitespaceAfter = JS.method1((JsValue _s, JsValue code) => {
+    return go(ok, code);
+  });
+
+  JsValue labelAfter = JS.method1((JsValue _s, JsValue code) => {
+    if (codeEq(code, cColon)) {
+      fxEnter(effects, "definitionMarker");
+      fxConsume(effects, code);
+      fxExit(effects, "definitionMarker");
+      string identifier = jsString(objGet(st, "identifier"));
+      if (!includesVal(defined, identifier)) {
+        push(defined, identifier);
+      }
+      return factorySpace(effects, whitespaceAfter, "gfmFootnoteDefinitionWhitespace", undef());
+    }
+    return go(nok, code);
+  });
+
+  JsValue labelEscape = JS.method1((JsValue _s, JsValue code) => {
+    if (codeEq(code, cLeftSquareBracket) || codeEq(code, cBackslash) || codeEq(code, cRightSquareBracket)) {
+      fxConsume(effects, code);
+      objSet(st, "size", jsInt(objGet(st, "size")) + 1);
+      return objGet(st, "labelInside");
+    }
+    return go(objGet(st, "labelInside"), code);
+  });
+
+  JsValue labelInside = JS.method1((JsValue _s, JsValue code) => {
+    int size = jsInt(objGet(st, "size"));
+    if (size > kLinkReferenceSizeMax || (codeEq(code, cRightSquareBracket) && !objGet(st, "data").truthy()) || isEof(code) || codeEq(code, cLeftSquareBracket) || markdownLineEndingOrSpace(code)) {
+      return go(nok, code);
+    }
+    if (codeEq(code, cRightSquareBracket)) {
+      fxExit(effects, tChunkString);
+      JsValue token = fxExit(effects, "gfmFootnoteDefinitionLabelString");
+      objSet(st, "identifier", normalizeIdentifier(jsString(sliceSer(self, token))));
+      fxEnter(effects, "gfmFootnoteDefinitionLabelMarker");
+      fxConsume(effects, code);
+      fxExit(effects, "gfmFootnoteDefinitionLabelMarker");
+      fxExit(effects, "gfmFootnoteDefinitionLabel");
+      return labelAfter;
+    }
+    if (!markdownLineEndingOrSpace(code)) {
+      objSet(st, "data", true);
+    }
+    objSet(st, "size", size + 1);
+    fxConsume(effects, code);
+    if (codeEq(code, cBackslash)) {
+      return labelEscape;
+    }
+    return objGet(st, "labelInside");
+  });
+  objSet(st, "labelInside", labelInside);
+
+  JsValue labelAtMarker = JS.method1((JsValue _s, JsValue code) => {
+    if (codeEq(code, cCaret)) {
+      fxEnter(effects, "gfmFootnoteDefinitionMarker");
+      fxConsume(effects, code);
+      fxExit(effects, "gfmFootnoteDefinitionMarker");
+      fxEnter(effects, "gfmFootnoteDefinitionLabelString");
+      JsValue chunk = fxEnter(effects, tChunkString);
+      objSet(chunk, "contentType", "string");
+      return labelInside;
+    }
+    return go(nok, code);
+  });
+
+  JsValue start = JS.method1((JsValue _s, JsValue code) => {
+    JsValue def = fxEnter(effects, "gfmFootnoteDefinition");
+    objSet(def, "_container", true);
+    fxEnter(effects, "gfmFootnoteDefinitionLabel");
+    fxEnter(effects, "gfmFootnoteDefinitionLabelMarker");
+    fxConsume(effects, code);
+    fxExit(effects, "gfmFootnoteDefinitionLabelMarker");
+    return labelAtMarker;
+  });
+  return start;
+});
+
+export JsValue gfmFootnote() {
+  JsValue cont = JS.object();
+  pin(cont, "tokenize", tokenizeDefinitionContinuation);
+  JsValue def = JS.object("name", "gfmFootnoteDefinition", "tokenize", tokenizeDefinitionStart, "continuation", cont, "exit", gfmFootnoteDefinitionEnd);
+  JsValue document = JS.object();
+  pinCode(document, cLeftSquareBracket, def);
+  JsValue call = JS.object("name", "gfmFootnoteCall", "tokenize", tokenizeGfmFootnoteCall);
+  JsValue potential = JS.object();
+  pin(potential, "name", "gfmPotentialFootnoteCall");
+  pin(potential, "add", "after");
+  pin(potential, "tokenize", tokenizePotentialGfmFootnoteCall);
+  pin(potential, "resolveTo", resolveToPotentialGfmFootnoteCall);
+  JsValue text = JS.object();
+  pinCode(text, cLeftSquareBracket, call);
+  pinCode(text, cRightSquareBracket, potential);
+  JsValue ext = JS.object();
+  pin(ext, "document", document);
+  pin(ext, "text", text);
+  return ext;
+}
+
+export JsValue gfmFootnoteHtml(JsValue _options) {
+  return JS.object();
+}

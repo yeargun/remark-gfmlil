@@ -14,13 +14,13 @@ describe("@itslil/remark-gfm closed lane", () => {
     assert.equal(typeof closed.remarkGfm, "function")
     assert.equal(closed.default, closed.remarkGfm)
     const store = {}
-    const transform = closed.remarkGfm.call({
+    const result = closed.remarkGfm.call({
       data() {
         return store
       },
     })
-    assert.equal(typeof transform, "function")
-    const tree = { type: "root", children: [] }
-    assert.equal(transform(tree), tree)
+    assert.equal(result, undefined)
+    assert.equal(Array.isArray(store.micromarkExtensions), true)
+    assert.equal(store.micromarkExtensions.length, 1)
   })
 })

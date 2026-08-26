@@ -1,0 +1,251 @@
+import { call1, call2, isNullish, jsInt, jsNull, jsString, objGet, objSet, pin, push, undef } from "../host.lil";
+import { unicodePunctuation, unicodeWhitespace } from "../util-character.lil";
+import { ccount } from "./ccount.lil";
+import { findAndReplace } from "./find-and-replace.lil";
+
+Regex wwwProto = new Regex("^w", "i");
+Regex labelEnd = new Regex("[-\\d_]$", "");
+Regex underscore = new Regex("_", "");
+Regex alnum = new Regex("[a-zA-Z\\d]", "");
+Regex trailRe = new Regex("[!\"&'),.:;<>?\\]}]+$", "");
+Regex urlFind = new Regex("(https?:\\/\\/|www(?=\\.))([-.\\w]+)([^ \\t\\r\\n]*)", "gi");
+Regex emailFind = new Regex("(?<=^|\\s|\\p{P}|\\p{S})([-.\\w+]+)@([-\\w]+(?:\\.[-\\w]+)+)", "gu");
+
+bool previousOk(JsValue found, bool email) {
+  int index = jsInt(objGet(found, "index"));
+  string input = jsString(objGet(found, "input"));
+  int code = -1;
+  if (index > 0) {
+    code = input.charCodeAt(index - 1);
+  }
+  bool ok = index == 0 || unicodeWhitespace(code) || unicodePunctuation(code);
+  if (email && code == 47) {
+    ok = false;
+  }
+  return ok;
+}
+
+bool isCorrectDomain(string domain) {
+  JsValue parts = JS.call(JS.get(domain, "split"), domain, ".");
+  int n = jsInt(JS.get(parts, "length"));
+  if (n < 2) {
+    return false;
+  }
+  string last = jsString(parts[n - 1]);
+  string prev = jsString(parts[n - 2]);
+  if (last.length > 0 && (underscore.test(last) || !alnum.test(last))) {
+    return false;
+  }
+  if (prev.length > 0 && (underscore.test(prev) || !alnum.test(prev))) {
+    return false;
+  }
+  return true;
+}
+
+JsValue splitUrl(string url) {
+  JsValue trailExec = trailRe.exec(url);
+  JsValue pair = JS.array();
+  if (isNullish(trailExec)) {
+    push(pair, url);
+    push(pair, undef());
+    return pair;
+  }
+  url = url.slice(0, jsInt(objGet(trailExec, "index")));
+  string trail = jsString(trailExec[0]);
+  int closingParenIndex = trail.indexOf(")");
+  int openingParens = ccount(url, "(");
+  int closingParens = ccount(url, ")");
+  while (closingParenIndex != -1 && openingParens > closingParens) {
+    url = url + trail.slice(0, closingParenIndex + 1);
+    trail = trail.slice(closingParenIndex + 1);
+    closingParenIndex = trail.indexOf(")");
+    closingParens = closingParens + 1;
+  }
+  push(pair, url);
+  push(pair, trail);
+  return pair;
+}
+
+JsValue findUrl = JS.methodRest((JsValue _self, JsValue args) => {
+  string protocol = jsString(args[1]);
+  string domain = jsString(args[2]);
+  string path = jsString(args[3]);
+  JsValue found = args[4];
+  if (!previousOk(found, false)) {
+    return false;
+  }
+  string prefix = "";
+  if (wwwProto.test(protocol)) {
+    domain = protocol + domain;
+    protocol = "";
+    prefix = "http://";
+  }
+  if (!isCorrectDomain(domain)) {
+    return false;
+  }
+  JsValue parts = splitUrl(domain + path);
+  if (jsString(parts[0]).length == 0) {
+    return false;
+  }
+  JsValue child = JS.object();
+  objSet(child, "type", "text");
+  objSet(child, "value", protocol + jsString(parts[0]));
+  objSet(child, "position", undef());
+  JsValue children = JS.array();
+  push(children, child);
+  JsValue result = JS.object();
+  objSet(result, "type", "link");
+  objSet(result, "title", jsNull());
+  objSet(result, "url", prefix + protocol + jsString(parts[0]));
+  objSet(result, "children", children);
+  objSet(result, "position", undef());
+  if (parts[1].truthy()) {
+    JsValue extra = JS.object();
+    objSet(extra, "type", "text");
+    objSet(extra, "value", parts[1]);
+    objSet(extra, "position", undef());
+    JsValue both = JS.array();
+    push(both, result);
+    push(both, extra);
+    return both;
+  }
+  return result;
+});
+
+JsValue findEmail = JS.methodRest((JsValue _self, JsValue args) => {
+  string atext = jsString(args[1]);
+  string label = jsString(args[2]);
+  JsValue found = args[3];
+  if (!previousOk(found, true) || labelEnd.test(label)) {
+    return false;
+  }
+  JsValue child = JS.object();
+  objSet(child, "type", "text");
+  objSet(child, "value", atext + "@" + label);
+  objSet(child, "position", undef());
+  JsValue children = JS.array();
+  push(children, child);
+  JsValue result = JS.object();
+  objSet(result, "type", "link");
+  objSet(result, "title", jsNull());
+  objSet(result, "url", "mailto:" + atext + "@" + label);
+  objSet(result, "children", children);
+  objSet(result, "position", undef());
+  return result;
+});
+
+JsValue enterLiteralAutolink = JS.method1((JsValue self, JsValue token) => {
+  JsValue node = JS.object();
+  objSet(node, "type", "link");
+  objSet(node, "title", jsNull());
+  objSet(node, "url", "");
+  objSet(node, "children", JS.array());
+  objSet(node, "position", undef());
+  call2(objGet(self, "enter"), self, node, token);
+  return undef();
+});
+
+JsValue enterLiteralAutolinkValue = JS.method1((JsValue self, JsValue token) => {
+  call1(objGet(objGet(objGet(self, "config"), "enter"), "autolinkProtocol"), self, token);
+  return undef();
+});
+
+JsValue exitLiteralAutolinkHttp = JS.method1((JsValue self, JsValue token) => {
+  call1(objGet(objGet(objGet(self, "config"), "exit"), "autolinkProtocol"), self, token);
+  return undef();
+});
+
+JsValue serializeToken(JsValue self, JsValue token) {
+  return JS.call(objGet(self, "sliceSerialize"), self, token);
+}
+
+JsValue exitLiteralAutolinkWww = JS.method1((JsValue self, JsValue token) => {
+  call1(objGet(objGet(objGet(self, "config"), "exit"), "data"), self, token);
+  JsValue stack = objGet(self, "stack");
+  JsValue node = stack[jsInt(JS.get(stack, "length")) - 1];
+  objSet(node, "url", "http://" + jsString(serializeToken(self, token)));
+  return undef();
+});
+
+JsValue exitLiteralAutolinkEmail = JS.method1((JsValue self, JsValue token) => {
+  call1(objGet(objGet(objGet(self, "config"), "exit"), "autolinkEmail"), self, token);
+  return undef();
+});
+
+JsValue exitLiteralAutolink = JS.method1((JsValue self, JsValue token) => {
+  call1(objGet(self, "exit"), self, token);
+  return undef();
+});
+
+JsValue transformGfmAutolinkLiterals = JS.method1((JsValue _self, JsValue tree) => {
+  JsValue ignore = JS.array();
+  push(ignore, "link");
+  push(ignore, "linkReference");
+  JsValue urlPair = JS.array();
+  push(urlPair, urlFind);
+  push(urlPair, findUrl);
+  JsValue emailPair = JS.array();
+  push(emailPair, emailFind);
+  push(emailPair, findEmail);
+  JsValue list = JS.array();
+  push(list, urlPair);
+  push(list, emailPair);
+  JsValue opts = JS.object();
+  objSet(opts, "ignore", ignore);
+  findAndReplace(tree, list, opts);
+  return undef();
+});
+
+export JsValue gfmAutolinkLiteralFromMarkdown() {
+  JsValue transforms = JS.array();
+  push(transforms, transformGfmAutolinkLiterals);
+  JsValue enter = JS.object();
+  pin(enter, "literalAutolink", enterLiteralAutolink);
+  pin(enter, "literalAutolinkEmail", enterLiteralAutolinkValue);
+  pin(enter, "literalAutolinkHttp", enterLiteralAutolinkValue);
+  pin(enter, "literalAutolinkWww", enterLiteralAutolinkValue);
+  JsValue exit = JS.object();
+  pin(exit, "literalAutolink", exitLiteralAutolink);
+  pin(exit, "literalAutolinkEmail", exitLiteralAutolinkEmail);
+  pin(exit, "literalAutolinkHttp", exitLiteralAutolinkHttp);
+  pin(exit, "literalAutolinkWww", exitLiteralAutolinkWww);
+  JsValue ext = JS.object();
+  pin(ext, "transforms", transforms);
+  pin(ext, "enter", enter);
+  pin(ext, "exit", exit);
+  return ext;
+}
+
+export JsValue gfmAutolinkLiteralToMarkdown() {
+  string inConstruct = "phrasing";
+  JsValue notInConstruct = JS.array();
+  push(notInConstruct, "autolink");
+  push(notInConstruct, "link");
+  push(notInConstruct, "image");
+  push(notInConstruct, "label");
+  JsValue unsafe = JS.array();
+  JsValue at = JS.object();
+  objSet(at, "character", "@");
+  objSet(at, "before", "[+\\-.\\w]");
+  objSet(at, "after", "[\\-.\\w]");
+  objSet(at, "inConstruct", inConstruct);
+  objSet(at, "notInConstruct", notInConstruct);
+  push(unsafe, at);
+  JsValue dot = JS.object();
+  objSet(dot, "character", ".");
+  objSet(dot, "before", "[Ww]");
+  objSet(dot, "after", "[\\-.\\w]");
+  objSet(dot, "inConstruct", inConstruct);
+  objSet(dot, "notInConstruct", notInConstruct);
+  push(unsafe, dot);
+  JsValue colon = JS.object();
+  objSet(colon, "character", ":");
+  objSet(colon, "before", "[ps]");
+  objSet(colon, "after", "\\/");
+  objSet(colon, "inConstruct", inConstruct);
+  objSet(colon, "notInConstruct", notInConstruct);
+  push(unsafe, colon);
+  JsValue ext = JS.object();
+  pin(ext, "unsafe", unsafe);
+  return ext;
+}

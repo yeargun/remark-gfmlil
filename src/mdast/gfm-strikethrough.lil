@@ -1,0 +1,75 @@
+import { call0, call1, call2, jsString, objGet, objSet, pin, push, undef } from "../host.lil";
+
+JsValue peekDelete = JS.method0((JsValue _self) => {
+  return "~";
+});
+
+JsValue handleDelete = JS.methodRest((JsValue _self, JsValue args) => {
+  JsValue node = args[0];
+  JsValue state = args[2];
+  JsValue info = args[3];
+  JsValue tracker = call1(objGet(state, "createTracker"), state, info);
+  JsValue exit = call1(objGet(state, "enter"), state, "strikethrough");
+  string value = jsString(call1(objGet(tracker, "move"), tracker, "~~"));
+  JsValue current = call0(objGet(tracker, "current"), tracker);
+  JsValue phrasingInfo = JS.object();
+  objSet(phrasingInfo, "before", value);
+  objSet(phrasingInfo, "after", "~");
+  objSet(phrasingInfo, "now", objGet(current, "now"));
+  objSet(phrasingInfo, "lineShift", objGet(current, "lineShift"));
+  value = value + jsString(call2(objGet(state, "containerPhrasing"), state, node, phrasingInfo));
+  value = value + jsString(call1(objGet(tracker, "move"), tracker, "~~"));
+  call0(exit, undef());
+  return value;
+});
+JS.set(handleDelete, "peek", peekDelete);
+
+JsValue enterStrikethrough = JS.method1((JsValue self, JsValue token) => {
+  JsValue node = JS.object();
+  objSet(node, "type", "delete");
+  objSet(node, "children", JS.array());
+  objSet(node, "position", undef());
+  call2(objGet(self, "enter"), self, node, token);
+  return undef();
+});
+
+JsValue exitStrikethrough = JS.method1((JsValue self, JsValue token) => {
+  call1(objGet(self, "exit"), self, token);
+  return undef();
+});
+
+export JsValue gfmStrikethroughFromMarkdown() {
+  JsValue canContainEols = JS.array();
+  push(canContainEols, "delete");
+  JsValue enter = JS.object();
+  pin(enter, "strikethrough", enterStrikethrough);
+  JsValue exit = JS.object();
+  pin(exit, "strikethrough", exitStrikethrough);
+  JsValue ext = JS.object();
+  pin(ext, "canContainEols", canContainEols);
+  pin(ext, "enter", enter);
+  pin(ext, "exit", exit);
+  return ext;
+}
+
+export JsValue gfmStrikethroughToMarkdown() {
+  JsValue constructsWithout = JS.array();
+  push(constructsWithout, "autolink");
+  push(constructsWithout, "destinationLiteral");
+  push(constructsWithout, "destinationRaw");
+  push(constructsWithout, "reference");
+  push(constructsWithout, "titleQuote");
+  push(constructsWithout, "titleApostrophe");
+  JsValue unsafe = JS.array();
+  JsValue tilde = JS.object();
+  objSet(tilde, "character", "~");
+  objSet(tilde, "inConstruct", "phrasing");
+  objSet(tilde, "notInConstruct", constructsWithout);
+  push(unsafe, tilde);
+  JsValue handlers = JS.object();
+  pin(handlers, "delete", handleDelete);
+  JsValue ext = JS.object();
+  pin(ext, "unsafe", unsafe);
+  pin(ext, "handlers", handlers);
+  return ext;
+}

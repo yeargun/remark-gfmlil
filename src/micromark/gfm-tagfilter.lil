@@ -1,0 +1,29 @@
+import { jsString, objGet, objSet, replaceFn, sliceSer, undef } from "../host.lil";
+
+Regex reFlow = new Regex("<(\\/?)(iframe|noembed|noframes|plaintext|script|style|title|textarea|xmp)(?=[\\t\\n\\f\\r />])", "gi");
+Regex reText = new Regex("^<(\\/?)(iframe|noembed|noframes|plaintext|script|style|title|textarea|xmp)(?=[\\t\\n\\f\\r />])", "i");
+
+void exitHtmlData(JsValue self, JsValue token, Regex filter) {
+  string value = jsString(sliceSer(self, token));
+  if (objGet(objGet(self, "options"), "allowDangerousHtml").truthy()) {
+    value = jsString(replaceFn(value, filter, JS.methodRest((JsValue _s, JsValue args) => {
+      return "&lt;" + jsString(args[1]) + jsString(args[2]);
+    })));
+  }
+  JS.call(objGet(self, "raw"), self, JS.call(objGet(self, "encode"), self, value));
+}
+
+export JsValue gfmTagfilterHtml() {
+  JsValue exit = JS.object();
+  objSet(exit, "htmlFlowData", JS.method1((JsValue self, JsValue token) => {
+    exitHtmlData(self, token, reFlow);
+    return undef();
+  }));
+  objSet(exit, "htmlTextData", JS.method1((JsValue self, JsValue token) => {
+    exitHtmlData(self, token, reText);
+    return undef();
+  }));
+  JsValue html = JS.object();
+  objSet(html, "exit", exit);
+  return html;
+}

@@ -1,0 +1,13 @@
+import { fail, jsString, objGet } from "../host.lil";
+
+export string checkListItemIndent(JsValue state) {
+  JsValue style = objGet(objGet(state, "options"), "listItemIndent");
+  string value = "one";
+  if (style.truthy()) {
+    value = jsString(style);
+  }
+  if (value != "tab" && value != "one" && value != "mixed") {
+    fail("Cannot serialize items with `" + value + "` for `options.listItemIndent`, expected `tab`, `one`, or `mixed`");
+  }
+  return value;
+}

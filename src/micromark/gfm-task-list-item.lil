@@ -1,0 +1,97 @@
+import { fxCheck, fxConsume, fxEnter, fxExit, go, isEof, makeNamedConstruct, objGet, pin, pinCode, undef } from "../host.lil";
+import { factorySpace } from "../factory-space.lil";
+import { markdownLineEnding, markdownLineEndingOrSpace, markdownSpace } from "../util-character.lil";
+import { cLeftSquareBracket, cLowercaseX, cRightSquareBracket, cUppercaseX, codeEq } from "../symbol/codes.lil";
+import { tWhitespace } from "../symbol/types.lil";
+
+JsValue spaceThenNonSpace = JS.method3((JsValue _self, JsValue effects, JsValue ok, JsValue nok) => {
+  JsValue after = JS.method1((JsValue _s, JsValue code) => {
+    if (isEof(code)) {
+      return go(nok, code);
+    }
+    return go(ok, code);
+  });
+  return factorySpace(effects, after, tWhitespace, undef());
+});
+
+JsValue tokenizeTasklistCheck = JS.method3((JsValue self, JsValue effects, JsValue ok, JsValue nok) => {
+  JsValue after = JS.method1((JsValue _s, JsValue code) => {
+    if (markdownLineEnding(code)) {
+      return go(ok, code);
+    }
+    if (markdownSpace(code)) {
+      return go(fxCheck(effects, JS.object("tokenize", spaceThenNonSpace), ok, nok), code);
+    }
+    return go(nok, code);
+  });
+
+  JsValue close = JS.method1((JsValue _s, JsValue code) => {
+    if (codeEq(code, cRightSquareBracket)) {
+      fxEnter(effects, "taskListCheckMarker");
+      fxConsume(effects, code);
+      fxExit(effects, "taskListCheckMarker");
+      fxExit(effects, "taskListCheck");
+      return after;
+    }
+    return go(nok, code);
+  });
+
+  JsValue inside = JS.method1((JsValue _s, JsValue code) => {
+    if (markdownLineEndingOrSpace(code)) {
+      fxEnter(effects, "taskListCheckValueUnchecked");
+      fxConsume(effects, code);
+      fxExit(effects, "taskListCheckValueUnchecked");
+      return close;
+    }
+    if (codeEq(code, cUppercaseX) || codeEq(code, cLowercaseX)) {
+      fxEnter(effects, "taskListCheckValueChecked");
+      fxConsume(effects, code);
+      fxExit(effects, "taskListCheckValueChecked");
+      return close;
+    }
+    return go(nok, code);
+  });
+
+  JsValue open = JS.method1((JsValue _s, JsValue code) => {
+    if (!isEof(objGet(self, "previous")) || !objGet(self, "_gfmTasklistFirstContentOfListItem").truthy()) {
+      return go(nok, code);
+    }
+    fxEnter(effects, "taskListCheck");
+    fxEnter(effects, "taskListCheckMarker");
+    fxConsume(effects, code);
+    fxExit(effects, "taskListCheckMarker");
+    return inside;
+  });
+
+  return open;
+});
+
+export JsValue gfmTaskListItem() {
+  JsValue tasklistCheck = makeNamedConstruct("tasklistCheck", tokenizeTasklistCheck);
+  JsValue text = JS.object();
+  pinCode(text, cLeftSquareBracket, tasklistCheck);
+  JsValue ext = JS.object();
+  pin(ext, "text", text);
+  return ext;
+}
+
+export JsValue gfmTaskListItemHtml() {
+  JsValue enter = JS.object();
+  JS.set(enter, "taskListCheck", JS.method0((JsValue self) => {
+    JS.call(JS.get(self, "tag"), self, "<input type=\"checkbox\" disabled=\"\" ");
+    return undef();
+  }));
+  JsValue exit = JS.object();
+  JS.set(exit, "taskListCheck", JS.method0((JsValue self) => {
+    JS.call(JS.get(self, "tag"), self, "/>");
+    return undef();
+  }));
+  JS.set(exit, "taskListCheckValueChecked", JS.method0((JsValue self) => {
+    JS.call(JS.get(self, "tag"), self, "checked=\"\" ");
+    return undef();
+  }));
+  JsValue html = JS.object();
+  JS.set(html, "enter", enter);
+  JS.set(html, "exit", exit);
+  return html;
+}

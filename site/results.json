@@ -10,9 +10,9 @@
   "warmupDiscard": 3,
   "comparison": "Official rows are an esbuild bundle of remark-gfm@4.0.1 plus its runtime graph, then Terser or esbuild. LilScript is the compiled npm file. Closed is extern_fields=false.",
   "spec": {
-    "total": 9,
-    "pass": 9,
-    "label": "package tests"
+    "total": 18,
+    "pass": 18,
+    "label": "official suite"
   },
   "play": {
     "kind": "md-plugin",
@@ -60,18 +60,18 @@
     {
       "id": "itslil",
       "name": "@itslil/remark-gfm · library",
-      "raw": 645,
-      "gzip9": 387,
-      "brotli11": 356,
+      "raw": 42804,
+      "gzip9": 14576,
+      "brotli11": 12921,
       "note": "LilScript js-module, extern_fields true. The npm ESM.",
       "primary": true
     },
     {
       "id": "itslil-closed",
       "name": "@itslil/remark-gfm · closed",
-      "raw": 563,
-      "gzip9": 327,
-      "brotli11": 282,
+      "raw": 42722,
+      "gzip9": 14513,
+      "brotli11": 12835,
       "note": "Same source, extern_fields false"
     }
   ],

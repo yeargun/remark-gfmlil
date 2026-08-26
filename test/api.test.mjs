@@ -30,25 +30,25 @@ describe("@itslil/remark-gfm", () => {
     assert.match(source, / as default[},]/)
   })
 
-  it("keeps pinned settings keys in the library lane", () => {
-    assert.match(source, /(?:\.gfm\s*=|gfm\s*:)/)
-    assert.match(source, /(?:\.singleTilde\s*=|singleTilde\s*:)/)
-    assert.match(source, /(?:\.settings\s*=|settings\s*:)/)
+  it("registers micromark and mdast extensions", () => {
+    const { store, processor } = fakeProcessor()
+    const result = remarkGfm.call(processor)
+    assert.equal(result, undefined)
+    assert.equal(Array.isArray(store.micromarkExtensions), true)
+    assert.equal(store.micromarkExtensions.length, 1)
+    assert.equal(typeof store.micromarkExtensions[0], "object")
+    assert.equal(Array.isArray(store.fromMarkdownExtensions), true)
+    assert.equal(store.fromMarkdownExtensions.length, 1)
+    assert.equal(Array.isArray(store.fromMarkdownExtensions[0]), true)
+    assert.equal(typeof store.toMarkdownExtensions[0], "object")
+    assert.equal(Array.isArray(store.toMarkdownExtensions[0].extensions), true)
   })
 
-  it("sets settings.gfm on a fake processor", () => {
+  it("forwards options into the GFM combiners", () => {
     const { store, processor } = fakeProcessor()
-    const transform = remarkGfm.call(processor)
-    assert.equal(store.settings.gfm, true)
-    assert.equal(store.settings.singleTilde, false)
-    assert.equal(typeof transform, "function")
-  })
-
-  it("forwards options.singleTilde", () => {
-    const { store, processor } = fakeProcessor()
-    remarkGfm.call(processor, { singleTilde: true })
-    assert.equal(store.settings.gfm, true)
-    assert.equal(store.settings.singleTilde, true)
+    remarkGfm.call(processor, { singleTilde: false, tableCellPadding: false })
+    assert.equal(store.micromarkExtensions.length, 1)
+    assert.equal(store.toMarkdownExtensions.length, 1)
   })
 
   it("works through processor.use(plugin, options)", () => {
@@ -56,25 +56,7 @@ describe("@itslil/remark-gfm", () => {
     processor.use = function use(plugin, options) {
       return plugin.call(this, options)
     }
-    processor.use(remarkGfm, { singleTilde: false })
-    assert.equal(store.settings.gfm, true)
-  })
-
-  it("creates a data object when the processor has none", () => {
-    const processor = {}
-    remarkGfm.call(processor)
-    assert.equal(typeof processor.data, "function")
-    assert.equal(processor.data().settings.gfm, true)
-  })
-
-  it("returns a no-op transformer for an already-parsed tree", () => {
-    const tree = {
-      type: "root",
-      children: [{ type: "paragraph", children: [{ type: "text", value: "a | b" }] }],
-    }
-    const transform = remarkGfm.call({ data() { return {} } })
-    const out = transform(tree)
-    assert.equal(out, tree)
-    assert.equal(tree.children[0].type, "paragraph")
+    processor.use(remarkGfm, { singleTilde: true })
+    assert.equal(store.micromarkExtensions.length, 1)
   })
 })

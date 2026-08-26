@@ -1,0 +1,13 @@
+import { includesVal, isStr, jsString, objGet } from "../host.lil";
+
+export JsValue convert(JsValue test) {
+  if (isStr(test)) {
+    string typ = jsString(test);
+    return JS.methodRest((JsValue _self, JsValue args) => {
+      return objGet(args[0], "type") == typ;
+    });
+  }
+  return JS.methodRest((JsValue _self, JsValue args) => {
+    return includesVal(test, objGet(args[0], "type"));
+  });
+}

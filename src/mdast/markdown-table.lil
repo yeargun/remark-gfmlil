@@ -1,0 +1,254 @@
+import { arrLen, isFn, isNullish, isStr, jsInt, jsString, objGet, optionOrEmpty, push, undef } from "../host.lil";
+
+string serializeCell(JsValue value) {
+  if (isNullish(value)) {
+    return "";
+  }
+  return jsString(value);
+}
+
+int toAlignment(JsValue value) {
+  if (!isStr(value)) {
+    return 0;
+  }
+  int code = jsString(value).charCodeAt(0);
+  if (code == 67 || code == 99) {
+    return 99;
+  }
+  if (code == 76 || code == 108) {
+    return 108;
+  }
+  if (code == 82 || code == 114) {
+    return 114;
+  }
+  return 0;
+}
+
+string spaces(int n) {
+  string out = "";
+  int i = 0;
+  while (i < n) {
+    out = out + " ";
+    i = i + 1;
+  }
+  return out;
+}
+
+string dashes(int n) {
+  string out = "";
+  int i = 0;
+  while (i < n) {
+    out = out + "-";
+    i = i + 1;
+  }
+  return out;
+}
+
+int cellSize(JsValue stringLength, string cell) {
+  if (isFn(stringLength)) {
+    return jsInt(JS.call(stringLength, undef(), cell));
+  }
+  return cell.length;
+}
+
+export string markdownTable(JsValue table, JsValue options) {
+  JsValue settings = optionOrEmpty(options);
+  JsValue align = objGet(settings, "align");
+  if (isNullish(align)) {
+    align = JS.array();
+  }
+  JsValue stringLength = objGet(settings, "stringLength");
+  bool alignDelimiters = objGet(settings, "alignDelimiters") != false;
+  bool padding = objGet(settings, "padding") != false;
+  bool delimiterStart = objGet(settings, "delimiterStart") != false;
+  bool delimiterEnd = objGet(settings, "delimiterEnd") != false;
+  JsValue alignments = JS.array();
+  JsValue cellMatrix = JS.array();
+  JsValue sizeMatrix = JS.array();
+  JsValue longestCellByColumn = JS.array();
+  int mostCellsPerRow = 0;
+  int rowIndex = -1;
+  int tableLen = arrLen(table);
+  while (true) {
+    rowIndex = rowIndex + 1;
+    if (rowIndex >= tableLen) {
+      break;
+    }
+    JsValue row = JS.array();
+    JsValue sizes = JS.array();
+    int columnIndex = -1;
+    int rowLen = arrLen(table[rowIndex]);
+    if (rowLen > mostCellsPerRow) {
+      mostCellsPerRow = rowLen;
+    }
+    while (true) {
+      columnIndex = columnIndex + 1;
+      if (columnIndex >= rowLen) {
+        break;
+      }
+      string cell = serializeCell(table[rowIndex][columnIndex]);
+      if (alignDelimiters) {
+        int size = cellSize(stringLength, cell);
+        sizes[columnIndex] = size;
+        JsValue longest = longestCellByColumn[columnIndex];
+        if (isNullish(longest) || size > jsInt(longest)) {
+          longestCellByColumn[columnIndex] = size;
+        }
+      }
+      push(row, cell);
+    }
+    cellMatrix[rowIndex] = row;
+    sizeMatrix[rowIndex] = sizes;
+  }
+  int columnIndex = -1;
+  bool alignIsList = !isStr(align) && !isNullish(align) && JS.get(align, "length").truthy();
+  if (alignIsList) {
+    while (true) {
+      columnIndex = columnIndex + 1;
+      if (columnIndex >= mostCellsPerRow) {
+        break;
+      }
+      alignments[columnIndex] = toAlignment(align[columnIndex]);
+    }
+  } else {
+    int code = toAlignment(align);
+    while (true) {
+      columnIndex = columnIndex + 1;
+      if (columnIndex >= mostCellsPerRow) {
+        break;
+      }
+      alignments[columnIndex] = code;
+    }
+  }
+  columnIndex = -1;
+  JsValue alignRow = JS.array();
+  JsValue alignSizes = JS.array();
+  while (true) {
+    columnIndex = columnIndex + 1;
+    if (columnIndex >= mostCellsPerRow) {
+      break;
+    }
+    int code = jsInt(alignments[columnIndex]);
+    string before = "";
+    string after = "";
+    if (code == 99) {
+      before = ":";
+      after = ":";
+    } else if (code == 108) {
+      before = ":";
+    } else if (code == 114) {
+      after = ":";
+    }
+    int size = 1;
+    if (alignDelimiters) {
+      int longest = jsInt(longestCellByColumn[columnIndex]);
+      int inner = longest - before.length - after.length;
+      if (inner > 1) {
+        size = inner;
+      } else {
+        size = 1;
+      }
+    }
+    string cell = before + dashes(size) + after;
+    if (alignDelimiters) {
+      size = before.length + size + after.length;
+      if (size > jsInt(longestCellByColumn[columnIndex])) {
+        longestCellByColumn[columnIndex] = size;
+      }
+      alignSizes[columnIndex] = size;
+    }
+    alignRow[columnIndex] = cell;
+  }
+  JS.call(JS.get(cellMatrix, "splice"), cellMatrix, 1, 0, alignRow);
+  JS.call(JS.get(sizeMatrix, "splice"), sizeMatrix, 1, 0, alignSizes);
+  rowIndex = -1;
+  JsValue lines = JS.array();
+  int matrixLen = arrLen(cellMatrix);
+  while (true) {
+    rowIndex = rowIndex + 1;
+    if (rowIndex >= matrixLen) {
+      break;
+    }
+    JsValue row = cellMatrix[rowIndex];
+    JsValue sizes = sizeMatrix[rowIndex];
+    columnIndex = -1;
+    string line = "";
+    while (true) {
+      columnIndex = columnIndex + 1;
+      if (columnIndex >= mostCellsPerRow) {
+        break;
+      }
+      string cell = "";
+      if (!isNullish(row[columnIndex])) {
+        cell = jsString(row[columnIndex]);
+      }
+      string before = "";
+      string after = "";
+      if (alignDelimiters) {
+        int longest = jsInt(longestCellByColumn[columnIndex]);
+        int used = 0;
+        if (!isNullish(sizes[columnIndex])) {
+          used = jsInt(sizes[columnIndex]);
+        }
+        int size = longest - used;
+        int code = jsInt(alignments[columnIndex]);
+        if (code == 114) {
+          before = spaces(size);
+        } else if (code == 99) {
+          if (size % 2 != 0) {
+            before = spaces(size / 2 + 1);
+            after = spaces(size / 2);
+          } else {
+            before = spaces(size / 2);
+            after = before;
+          }
+        } else {
+          after = spaces(size);
+        }
+      }
+      if (delimiterStart && columnIndex == 0) {
+        line = line + "|";
+      }
+      bool addPad = padding;
+      if (addPad) {
+        if (!alignDelimiters && cell == "") {
+          addPad = false;
+        }
+      }
+      if (addPad) {
+        if (delimiterStart || columnIndex != 0) {
+          line = line + " ";
+        }
+      }
+      if (alignDelimiters) {
+        line = line + before;
+      }
+      line = line + cell;
+      if (alignDelimiters) {
+        line = line + after;
+      }
+      if (padding) {
+        line = line + " ";
+      }
+      if (delimiterEnd || columnIndex != mostCellsPerRow - 1) {
+        line = line + "|";
+      }
+    }
+    if (!delimiterEnd) {
+      Regex trail = new Regex(" +$", "");
+      line = line.replace(trail, "");
+    }
+    push(lines, line);
+  }
+  int li = 0;
+  int ln = arrLen(lines);
+  string out = "";
+  while (li < ln) {
+    if (li > 0) {
+      out = out + "\n";
+    }
+    out = out + jsString(lines[li]);
+    li = li + 1;
+  }
+  return out;
+}
