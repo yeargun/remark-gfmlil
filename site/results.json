@@ -60,18 +60,18 @@
     {
       "id": "itslil",
       "name": "@itslil/remark-gfm · library",
-      "raw": 42804,
-      "gzip9": 14576,
-      "brotli11": 12921,
+      "raw": 34583,
+      "gzip9": 12213,
+      "brotli11": 10891,
       "note": "LilScript js-module, extern_fields true. The npm ESM.",
       "primary": true
     },
     {
       "id": "itslil-closed",
       "name": "@itslil/remark-gfm · closed",
-      "raw": 42722,
-      "gzip9": 14513,
-      "brotli11": 12835,
+      "raw": 34501,
+      "gzip9": 12147,
+      "brotli11": 10840,
       "note": "Same source, extern_fields false"
     }
   ],
