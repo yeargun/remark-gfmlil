@@ -1,4 +1,4 @@
-import { call0, call1, call2, jsString, objGet, objSet, optionOrEmpty, pin, push, undef } from "../host.lil";
+import { call0, call1, call2, jsString, objGet, objSet, optionOrEmpty, push, undef } from "../host.lil";
 import { normalizeIdentifier } from "../util-normalize-identifier.lil";
 
 JsValue footnoteReferencePeek = JS.method0((JsValue _self) => {
@@ -49,7 +49,7 @@ JsValue mapExceptFirst = JS.methodRest((JsValue _self, JsValue args) => {
   return "    " + line;
 });
 
-JsValue enterFootnoteCallString = JS.method1((JsValue self, JsValue _token) => {
+JsValue enterFootnoteCallString = JS.method0((JsValue self) => {
   call0(objGet(self, "buffer"), self);
   return undef();
 });
@@ -59,12 +59,11 @@ JsValue enterFootnoteCall = JS.method1((JsValue self, JsValue token) => {
   objSet(node, "type", "footnoteReference");
   objSet(node, "identifier", "");
   objSet(node, "label", "");
-  objSet(node, "position", undef());
   call2(objGet(self, "enter"), self, node, token);
   return undef();
 });
 
-JsValue enterFootnoteDefinitionLabelString = JS.method1((JsValue self, JsValue _token) => {
+JsValue enterFootnoteDefinitionLabelString = JS.method0((JsValue self) => {
   call0(objGet(self, "buffer"), self);
   return undef();
 });
@@ -75,7 +74,6 @@ JsValue enterFootnoteDefinition = JS.method1((JsValue self, JsValue token) => {
   objSet(node, "identifier", "");
   objSet(node, "label", "");
   objSet(node, "children", JS.array());
-  objSet(node, "position", undef());
   call2(objGet(self, "enter"), self, node, token);
   return undef();
 });
@@ -109,20 +107,20 @@ JsValue exitFootnoteDefinition = JS.method1((JsValue self, JsValue token) => {
 });
 
 export JsValue gfmFootnoteFromMarkdown() {
-  JsValue enter = JS.object();
-  pin(enter, "gfmFootnoteCallString", enterFootnoteCallString);
-  pin(enter, "gfmFootnoteCall", enterFootnoteCall);
-  pin(enter, "gfmFootnoteDefinitionLabelString", enterFootnoteDefinitionLabelString);
-  pin(enter, "gfmFootnoteDefinition", enterFootnoteDefinition);
-  JsValue exit = JS.object();
-  pin(exit, "gfmFootnoteCallString", exitFootnoteCallString);
-  pin(exit, "gfmFootnoteCall", exitFootnoteCall);
-  pin(exit, "gfmFootnoteDefinitionLabelString", exitFootnoteDefinitionLabelString);
-  pin(exit, "gfmFootnoteDefinition", exitFootnoteDefinition);
-  JsValue ext = JS.object();
-  pin(ext, "enter", enter);
-  pin(ext, "exit", exit);
-  return ext;
+  return JS.object(
+    "enter", JS.object(
+      "gfmFootnoteCallString", enterFootnoteCallString,
+      "gfmFootnoteCall", enterFootnoteCall,
+      "gfmFootnoteDefinitionLabelString", enterFootnoteDefinitionLabelString,
+      "gfmFootnoteDefinition", enterFootnoteDefinition
+    ),
+    "exit", JS.object(
+      "gfmFootnoteCallString", exitFootnoteCallString,
+      "gfmFootnoteCall", exitFootnoteCall,
+      "gfmFootnoteDefinitionLabelString", exitFootnoteDefinitionLabelString,
+      "gfmFootnoteDefinition", exitFootnoteDefinition
+    )
+  );
 }
 
 export JsValue gfmFootnoteToMarkdown(JsValue options) {
@@ -158,20 +156,14 @@ export JsValue gfmFootnoteToMarkdown(JsValue options) {
     call0(exit, undef());
     return value;
   });
-  JsValue handlers = JS.object();
-  pin(handlers, "footnoteDefinition", footnoteDefinition);
-  pin(handlers, "footnoteReference", footnoteReference);
-  JsValue unsafe = JS.array();
-  JsValue u = JS.object();
-  objSet(u, "character", "[");
-  JsValue inConstruct = JS.array();
-  push(inConstruct, "label");
-  push(inConstruct, "phrasing");
-  push(inConstruct, "reference");
-  objSet(u, "inConstruct", inConstruct);
-  push(unsafe, u);
-  JsValue ext = JS.object();
-  pin(ext, "handlers", handlers);
-  pin(ext, "unsafe", unsafe);
-  return ext;
+  return JS.object(
+    "handlers", JS.object(
+      "footnoteDefinition", footnoteDefinition,
+      "footnoteReference", footnoteReference
+    ),
+    "unsafe", JS.array(JS.object(
+      "character", "[",
+      "inConstruct", JS.array("label", "phrasing", "reference")
+    ))
+  );
 }

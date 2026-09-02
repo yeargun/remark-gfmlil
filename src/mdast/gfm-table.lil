@@ -1,4 +1,4 @@
-import { arrLen, call0, call1, call2, jsNull, jsString, objGet, objSet, optionOrEmpty, pin, push, replaceFn, undef } from "../host.lil";
+import { arrLen, call0, call1, call2, jsNull, jsString, objGet, objSet, optionOrEmpty, push, replaceFn, undef } from "../host.lil";
 import { markdownTable } from "./markdown-table.lil";
 import { defaultHandlers } from "../to-markdown/handle.lil";
 
@@ -30,7 +30,6 @@ JsValue enterTable = JS.method1((JsValue self, JsValue token) => {
   objSet(node, "type", "table");
   objSet(node, "align", mapped);
   objSet(node, "children", JS.array());
-  objSet(node, "position", undef());
   call2(objGet(self, "enter"), self, node, token);
   objSet(objGet(self, "data"), "inTable", true);
   return undef();
@@ -46,7 +45,6 @@ JsValue enterRow = JS.method1((JsValue self, JsValue token) => {
   JsValue node = JS.object();
   objSet(node, "type", "tableRow");
   objSet(node, "children", JS.array());
-  objSet(node, "position", undef());
   call2(objGet(self, "enter"), self, node, token);
   return undef();
 });
@@ -60,7 +58,6 @@ JsValue enterCell = JS.method1((JsValue self, JsValue token) => {
   JsValue node = JS.object();
   objSet(node, "type", "tableCell");
   objSet(node, "children", JS.array());
-  objSet(node, "position", undef());
   call2(objGet(self, "enter"), self, node, token);
   return undef();
 });
@@ -78,21 +75,21 @@ JsValue exitCodeText = JS.method1((JsValue self, JsValue token) => {
 });
 
 export JsValue gfmTableFromMarkdown() {
-  JsValue enter = JS.object();
-  pin(enter, "table", enterTable);
-  pin(enter, "tableData", enterCell);
-  pin(enter, "tableHeader", enterCell);
-  pin(enter, "tableRow", enterRow);
-  JsValue exit = JS.object();
-  pin(exit, "codeText", exitCodeText);
-  pin(exit, "table", exitTable);
-  pin(exit, "tableData", exitGeneric);
-  pin(exit, "tableHeader", exitGeneric);
-  pin(exit, "tableRow", exitGeneric);
-  JsValue ext = JS.object();
-  pin(ext, "enter", enter);
-  pin(ext, "exit", exit);
-  return ext;
+  return JS.object(
+    "enter", JS.object(
+      "table", enterTable,
+      "tableData", enterCell,
+      "tableHeader", enterCell,
+      "tableRow", enterRow
+    ),
+    "exit", JS.object(
+      "codeText", exitCodeText,
+      "table", exitTable,
+      "tableData", exitGeneric,
+      "tableHeader", exitGeneric,
+      "tableRow", exitGeneric
+    )
+  );
 }
 
 export JsValue gfmTableToMarkdown(JsValue options) {
@@ -219,41 +216,20 @@ export JsValue gfmTableToMarkdown(JsValue options) {
     return value;
   });
 
-  JsValue unsafe = JS.array();
-  JsValue u1 = JS.object();
-  objSet(u1, "character", "\r");
-  objSet(u1, "inConstruct", "tableCell");
-  push(unsafe, u1);
-  JsValue u2 = JS.object();
-  objSet(u2, "character", "\n");
-  objSet(u2, "inConstruct", "tableCell");
-  push(unsafe, u2);
-  JsValue u3 = JS.object();
-  objSet(u3, "atBreak", true);
-  objSet(u3, "character", "|");
-  objSet(u3, "after", "[\\t :-]");
-  push(unsafe, u3);
-  JsValue u4 = JS.object();
-  objSet(u4, "character", "|");
-  objSet(u4, "inConstruct", "tableCell");
-  push(unsafe, u4);
-  JsValue u5 = JS.object();
-  objSet(u5, "atBreak", true);
-  objSet(u5, "character", ":");
-  objSet(u5, "after", "-");
-  push(unsafe, u5);
-  JsValue u6 = JS.object();
-  objSet(u6, "atBreak", true);
-  objSet(u6, "character", "-");
-  objSet(u6, "after", "[:|-]");
-  push(unsafe, u6);
-  JsValue handlers = JS.object();
-  pin(handlers, "inlineCode", inlineCodeWithTable);
-  pin(handlers, "table", handleTable);
-  pin(handlers, "tableCell", handleTableCell);
-  pin(handlers, "tableRow", handleTableRow);
-  JsValue ext = JS.object();
-  pin(ext, "unsafe", unsafe);
-  pin(ext, "handlers", handlers);
-  return ext;
+  return JS.object(
+    "unsafe", JS.array(
+      JS.object("character", "\r", "inConstruct", "tableCell"),
+      JS.object("character", "\n", "inConstruct", "tableCell"),
+      JS.object("atBreak", true, "character", "|", "after", "[\t :-]"),
+      JS.object("character", "|", "inConstruct", "tableCell"),
+      JS.object("atBreak", true, "character", ":", "after", "-"),
+      JS.object("atBreak", true, "character", "-", "after", "[:|-]")
+    ),
+    "handlers", JS.object(
+      "inlineCode", inlineCodeWithTable,
+      "table", handleTable,
+      "tableCell", handleTableCell,
+      "tableRow", handleTableRow
+    )
+  );
 }

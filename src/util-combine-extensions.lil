@@ -1,6 +1,16 @@
 import { arrLen, hasOwn, isNullish, objGet, objSet, push } from "./host.lil";
 import { splice } from "./util-chunked.lil";
 
+JsValue constructList(JsValue value) {
+  if (value.isArray()) {
+    return value;
+  }
+  if (value.truthy()) {
+    return JS.array(value);
+  }
+  return JS.array();
+}
+
 void mergeConstructs(JsValue existing, JsValue list) {
   JsValue before = JS.array();
   int index = -1;
@@ -43,14 +53,7 @@ void syntaxExtension(JsValue all, JsValue extension) {
         if (!hasOwn(left, code)) {
           objSet(left, code, JS.array());
         }
-        JsValue value = objGet(right, code);
-        JsValue asList = JS.array();
-        if (value.isArray()) {
-          asList = value;
-        } else if (value.truthy()) {
-          push(asList, value);
-        }
-        mergeConstructs(objGet(left, code), asList);
+        mergeConstructs(objGet(left, code), constructList(objGet(right, code)));
       }
     }
   }

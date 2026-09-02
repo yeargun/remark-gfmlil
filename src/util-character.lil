@@ -1,4 +1,4 @@
-import { fromCharCode1, isEof } from "./host.lil";
+import { fromCharCode1 } from "./host.lil";
 import { cDel, cHorizontalTab, cNul, cSpace, cVirtualSpace, codeEq } from "./symbol/codes.lil";
 
 Regex asciiAlphaRe = new Regex("[A-Za-z]", "");
@@ -11,15 +11,6 @@ Regex unicodePunctuationRe = new Regex("\\p{P}|\\p{S}", "u");
 Regex unicodeWhitespaceRe = new Regex("\\s", "");
 
 bool regexCode(Regex pattern, JsValue code) {
-  if (isEof(code)) {
-    return false;
-  }
-  if (code is float) {
-    if (code < 0.0) {
-      return false;
-    }
-    return pattern.test(fromCharCode1(code));
-  }
   if (JS.typeOf(code) != "number") {
     return false;
   }
@@ -43,13 +34,6 @@ export bool asciiAtext(JsValue code) {
 }
 
 export bool asciiControl(JsValue code) {
-  if (isEof(code)) {
-    return false;
-  }
-  if (code is float) {
-    int n = code.toInt();
-    return n < cSpace || n == cDel;
-  }
   if (JS.typeOf(code) != "number") {
     return false;
   }
@@ -70,12 +54,6 @@ export bool asciiPunctuation(JsValue code) {
 }
 
 export bool markdownLineEnding(JsValue code) {
-  if (isEof(code)) {
-    return false;
-  }
-  if (code is float) {
-    return code.toInt() < cHorizontalTab;
-  }
   if (JS.typeOf(code) != "number") {
     return false;
   }
@@ -83,13 +61,6 @@ export bool markdownLineEnding(JsValue code) {
 }
 
 export bool markdownLineEndingOrSpace(JsValue code) {
-  if (isEof(code)) {
-    return false;
-  }
-  if (code is float) {
-    int n = code.toInt();
-    return n < cNul || n == cSpace;
-  }
   if (JS.typeOf(code) != "number") {
     return false;
   }

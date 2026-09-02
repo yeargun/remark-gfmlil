@@ -1,4 +1,4 @@
-import { call0, call1, call2, jsString, objGet, objSet, pin, push, undef } from "../host.lil";
+import { call0, call1, call2, jsString, objGet, objSet, undef } from "../host.lil";
 
 JsValue peekDelete = JS.method0((JsValue _self) => {
   return "~";
@@ -28,7 +28,6 @@ JsValue enterStrikethrough = JS.method1((JsValue self, JsValue token) => {
   JsValue node = JS.object();
   objSet(node, "type", "delete");
   objSet(node, "children", JS.array());
-  objSet(node, "position", undef());
   call2(objGet(self, "enter"), self, node, token);
   return undef();
 });
@@ -39,37 +38,28 @@ JsValue exitStrikethrough = JS.method1((JsValue self, JsValue token) => {
 });
 
 export JsValue gfmStrikethroughFromMarkdown() {
-  JsValue canContainEols = JS.array();
-  push(canContainEols, "delete");
-  JsValue enter = JS.object();
-  pin(enter, "strikethrough", enterStrikethrough);
-  JsValue exit = JS.object();
-  pin(exit, "strikethrough", exitStrikethrough);
-  JsValue ext = JS.object();
-  pin(ext, "canContainEols", canContainEols);
-  pin(ext, "enter", enter);
-  pin(ext, "exit", exit);
-  return ext;
+  return JS.object(
+    "canContainEols", JS.array("delete"),
+    "enter", JS.object("strikethrough", enterStrikethrough),
+    "exit", JS.object("strikethrough", exitStrikethrough)
+  );
 }
 
 export JsValue gfmStrikethroughToMarkdown() {
-  JsValue constructsWithout = JS.array();
-  push(constructsWithout, "autolink");
-  push(constructsWithout, "destinationLiteral");
-  push(constructsWithout, "destinationRaw");
-  push(constructsWithout, "reference");
-  push(constructsWithout, "titleQuote");
-  push(constructsWithout, "titleApostrophe");
-  JsValue unsafe = JS.array();
-  JsValue tilde = JS.object();
-  objSet(tilde, "character", "~");
-  objSet(tilde, "inConstruct", "phrasing");
-  objSet(tilde, "notInConstruct", constructsWithout);
-  push(unsafe, tilde);
-  JsValue handlers = JS.object();
-  pin(handlers, "delete", handleDelete);
-  JsValue ext = JS.object();
-  pin(ext, "unsafe", unsafe);
-  pin(ext, "handlers", handlers);
-  return ext;
+  JsValue constructsWithout = JS.array(
+    "autolink",
+    "destinationLiteral",
+    "destinationRaw",
+    "reference",
+    "titleQuote",
+    "titleApostrophe"
+  );
+  return JS.object(
+    "unsafe", JS.array(JS.object(
+      "character", "~",
+      "inConstruct", "phrasing",
+      "notInConstruct", constructsWithout
+    )),
+    "handlers", JS.object("delete", handleDelete)
+  );
 }

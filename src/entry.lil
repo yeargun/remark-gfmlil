@@ -1,4 +1,4 @@
-import { isFn, isNullish, objGet, objSet, push, undef } from "./host.lil";
+import { isNullish, objGet, objSet, push, undef } from "./host.lil";
 import { gfm } from "./micromark/gfm.lil";
 import { gfmFromMarkdown, gfmToMarkdown } from "./mdast/gfm.lil";
 
@@ -7,14 +7,7 @@ JsValue remarkGfmCall(JsValue self, JsValue options) {
   if (isNullish(settings)) {
     settings = JS.object();
   }
-  JsValue dataFn = objGet(self, "data");
-  JsValue data = JS.object();
-  if (isFn(dataFn)) {
-    data = JS.call(dataFn, self);
-    if (isNullish(data)) {
-      data = JS.object();
-    }
-  }
+  JsValue data = JS.invoke(self, "data");
   JsValue micromarkExtensions = objGet(data, "micromarkExtensions");
   if (isNullish(micromarkExtensions)) {
     micromarkExtensions = JS.array();
@@ -36,5 +29,5 @@ JsValue remarkGfmCall(JsValue self, JsValue options) {
   return undef();
 }
 
-export JsValue remarkGfm = JS.method1(remarkGfmCall);
+JsValue remarkGfm = JS.method1(remarkGfmCall);
 export JsValue default = remarkGfm;

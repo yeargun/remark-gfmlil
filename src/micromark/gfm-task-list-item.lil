@@ -1,4 +1,4 @@
-import { fxCheck, fxConsume, fxEnter, fxExit, go, isEof, makeNamedConstruct, objGet, pin, pinCode, undef } from "../host.lil";
+import { fxCheck, fxConsume, fxEnter, fxExit, go, isEof, makeNamedConstruct, objGet, setCodeKey, undef } from "../host.lil";
 import { factorySpace } from "../factory-space.lil";
 import { markdownLineEnding, markdownLineEndingOrSpace, markdownSpace } from "../util-character.lil";
 import { cLeftSquareBracket, cLowercaseX, cRightSquareBracket, cUppercaseX, codeEq } from "../symbol/codes.lil";
@@ -69,10 +69,8 @@ JsValue tokenizeTasklistCheck = JS.method3((JsValue self, JsValue effects, JsVal
 export JsValue gfmTaskListItem() {
   JsValue tasklistCheck = makeNamedConstruct("tasklistCheck", tokenizeTasklistCheck);
   JsValue text = JS.object();
-  pinCode(text, cLeftSquareBracket, tasklistCheck);
-  JsValue ext = JS.object();
-  pin(ext, "text", text);
-  return ext;
+  setCodeKey(text, cLeftSquareBracket, tasklistCheck);
+  return JS.object("text", text);
 }
 
 export JsValue gfmTaskListItemHtml() {

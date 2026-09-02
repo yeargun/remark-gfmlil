@@ -2,7 +2,7 @@
   "pin": "remark-gfm@4.0.1",
   "package": "@itslil/remark-gfm",
   "file": "remark-gfm",
-  "lilExport": "remarkGfm",
+  "lilExport": "default",
   "officialExport": "default",
   "node": "v22.21.1",
   "codec": "lilscript-codec gzip-9 / brotli-11",
@@ -10,9 +10,9 @@
   "warmupDiscard": 3,
   "comparison": "Official rows are an esbuild bundle of remark-gfm@4.0.1 plus its runtime graph, then Terser or esbuild. LilScript is the compiled npm file. Closed is extern_fields=false.",
   "spec": {
-    "total": 18,
-    "pass": 18,
-    "label": "official suite"
+    "total": 19,
+    "pass": 19,
+    "label": "tests passing"
   },
   "play": {
     "kind": "md-plugin",
@@ -60,19 +60,19 @@
     {
       "id": "itslil",
       "name": "@itslil/remark-gfm · library",
-      "raw": 34583,
-      "gzip9": 12213,
-      "brotli11": 10891,
+      "raw": 32996,
+      "gzip9": 11850,
+      "brotli11": 10559,
       "note": "LilScript js-module, extern_fields true. The npm ESM.",
       "primary": true
     },
     {
       "id": "itslil-closed",
       "name": "@itslil/remark-gfm · closed",
-      "raw": 34501,
-      "gzip9": 12147,
-      "brotli11": 10840,
-      "note": "Same source, extern_fields false"
+      "raw": 34779,
+      "gzip9": 12930,
+      "brotli11": 11509,
+      "note": "Same source, extern_fields false; diagnostic only"
     }
   ],
   "throughput": [

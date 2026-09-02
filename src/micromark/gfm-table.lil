@@ -1,4 +1,4 @@
-import { arrLen, call1, call3, copyPoint, eventEnter, eventExit, fxConsume, fxEnter, fxExit, go, includesVal, isEof, isNullish, jsInt, jsString, nowOf, nullMap, objGet, objGetVal, objSet, pin, push, setTokenType, undef } from "../host.lil";
+import { arrLen, call1, call3, copyPoint, eventEnter, eventExit, fxConsume, fxEnter, fxExit, go, includesVal, isEof, isNullish, jsInt, jsString, nowOf, nullMap, objGet, objGetVal, objSet, push, setTokenType, undef } from "../host.lil";
 import { factorySpace } from "../factory-space.lil";
 import { markdownLineEnding, markdownLineEndingOrSpace, markdownSpace } from "../util-character.lil";
 import { cBackslash, cColon, cDash, cVerticalBar, codeEq } from "../symbol/codes.lil";
@@ -16,7 +16,7 @@ JsValue getPoint(JsValue events, int index) {
   return objGet(event[1], side);
 }
 
-JsValue flushCell(JsValue map, JsValue context, JsValue range, int rowKind, JsValue rowEnd, JsValue previousCell) {
+JsValue flushCell(JsValue map, JsValue context, CellRange range, int rowKind, JsValue rowEnd, JsValue previousCell) {
   string groupName = "tableData";
   if (rowKind == 1) {
     groupName = "tableHeader";
@@ -24,45 +24,45 @@ JsValue flushCell(JsValue map, JsValue context, JsValue range, int rowKind, JsVa
     groupName = "tableDelimiter";
   }
   string valueName = "tableContent";
-  if (jsInt(range[0]) != 0) {
-    objSet(previousCell, "end", copyPoint(getPoint(objGet(context, "events"), jsInt(range[0]))));
+  if (range.before != 0) {
+    objSet(previousCell, "end", copyPoint(getPoint(objGet(context, "events"), range.before)));
     JsValue prevExit = JS.array();
     push(prevExit, eventExit(previousCell, context));
-    call3(objGet(map, "add"), map, range[0], 0, prevExit);
+    call3(objGet(map, "add"), map, range.before, 0, prevExit);
   }
-  JsValue now = getPoint(objGet(context, "events"), jsInt(range[1]));
+  JsValue now = getPoint(objGet(context, "events"), range.start);
   previousCell = JS.object();
   objSet(previousCell, "type", groupName);
   objSet(previousCell, "start", copyPoint(now));
   objSet(previousCell, "end", copyPoint(now));
   JsValue enterCell = JS.array();
   push(enterCell, eventEnter(previousCell, context));
-  call3(objGet(map, "add"), map, range[1], 0, enterCell);
-  if (jsInt(range[2]) != 0) {
-    JsValue relatedStart = getPoint(objGet(context, "events"), jsInt(range[2]));
-    JsValue relatedEnd = getPoint(objGet(context, "events"), jsInt(range[3]));
+  call3(objGet(map, "add"), map, range.start, 0, enterCell);
+  if (range.contentStart != 0) {
+    JsValue relatedStart = getPoint(objGet(context, "events"), range.contentStart);
+    JsValue relatedEnd = getPoint(objGet(context, "events"), range.contentEnd);
     JsValue valueToken = JS.object();
     objSet(valueToken, "type", valueName);
     objSet(valueToken, "start", copyPoint(relatedStart));
     objSet(valueToken, "end", copyPoint(relatedEnd));
     JsValue enterValue = JS.array();
     push(enterValue, eventEnter(valueToken, context));
-    call3(objGet(map, "add"), map, range[2], 0, enterValue);
+    call3(objGet(map, "add"), map, range.contentStart, 0, enterValue);
     if (rowKind != 2) {
-      JsValue start = objGet(context, "events")[jsInt(range[2])];
-      JsValue end = objGet(context, "events")[jsInt(range[3])];
+      JsValue start = objGet(context, "events")[range.contentStart];
+      JsValue end = objGet(context, "events")[range.contentEnd];
       objSet(start[1], "end", copyPoint(objGet(end[1], "end")));
       setTokenType(start[1], tChunkText);
       objSet(start[1], "contentType", kContentTypeText);
-      if (jsInt(range[3]) > jsInt(range[2]) + 1) {
-        int a = jsInt(range[2]) + 1;
-        int b = jsInt(range[3]) - jsInt(range[2]) - 1;
+      if (range.contentEnd > range.contentStart + 1) {
+        int a = range.contentStart + 1;
+        int b = range.contentEnd - range.contentStart - 1;
         call3(objGet(map, "add"), map, a, b, JS.array());
       }
     }
     JsValue exitValue = JS.array();
     push(exitValue, eventExit(valueToken, context));
-    call3(objGet(map, "add"), map, jsInt(range[3]) + 1, 0, exitValue);
+    call3(objGet(map, "add"), map, range.contentEnd + 1, 0, exitValue);
   }
   if (!isNullish(rowEnd)) {
     objSet(previousCell, "end", copyPoint(getPoint(objGet(context, "events"), jsInt(rowEnd))));
@@ -86,142 +86,146 @@ void flushTableEnd(JsValue map, JsValue context, int index, JsValue table, JsVal
   call3(objGet(map, "add"), map, index + 1, 0, exits);
 }
 
-JsValue zeroRange() {
-  JsValue range = JS.array();
-  push(range, 0);
-  push(range, 0);
-  push(range, 0);
-  push(range, 0);
-  return range;
+class CellRange {
+  int before;
+  int start;
+  int contentStart;
+  int contentEnd;
 }
 
-JsValue newTableState() {
-  JsValue st = JS.object();
-  pin(st, "pipe", true);
-  pin(st, "rowKind", 0);
-  pin(st, "lastCell", zeroRange());
-  pin(st, "cell", zeroRange());
-  pin(st, "afterHead", false);
-  pin(st, "lastTableEnd", 0);
-  pin(st, "table", undef());
-  pin(st, "body", undef());
-  pin(st, "currentCell", undef());
+class TableState {
+  bool pipe;
+  int rowKind;
+  CellRange lastCell;
+  CellRange cell;
+  bool afterHead;
+  int lastTableEnd;
+  JsValue table;
+  JsValue body;
+  JsValue currentCell;
+}
+
+TableState newTableState() {
+  TableState st = new TableState();
+  st.pipe = true;
+  st.lastCell = new CellRange();
+  st.cell = new CellRange();
   return st;
 }
 
-void applyTableEnter(JsValue st, JsValue context, JsValue map, int index, JsValue token, string tokenType) {
-  int rowKind = jsInt(objGet(st, "rowKind"));
-  JsValue lastCell = objGet(st, "lastCell");
-  JsValue cell = objGet(st, "cell");
-  JsValue currentCell = objGet(st, "currentCell");
+void applyTableEnter(TableState st, JsValue context, JsValue map, int index, JsValue token, string tokenType) {
+  int rowKind = st.rowKind;
+  CellRange lastCell = st.lastCell;
+  CellRange cell = st.cell;
+  JsValue currentCell = st.currentCell;
   if (tokenType == "tableHead") {
-    pin(st, "afterHead", false);
-    int lastTableEnd = jsInt(objGet(st, "lastTableEnd"));
+    st.afterHead = false;
+    int lastTableEnd = st.lastTableEnd;
     if (lastTableEnd != 0) {
-      flushTableEnd(map, context, lastTableEnd, objGet(st, "table"), objGet(st, "body"));
-      pin(st, "body", undef());
-      pin(st, "lastTableEnd", 0);
+      flushTableEnd(map, context, lastTableEnd, st.table, st.body);
+      st.body = undef();
+      st.lastTableEnd = 0;
     }
     JsValue currentTable = JS.object();
     objSet(currentTable, "type", "table");
     objSet(currentTable, "start", copyPoint(objGet(token, "start")));
     objSet(currentTable, "end", copyPoint(objGet(token, "end")));
-    pin(st, "table", currentTable);
+    st.table = currentTable;
     JsValue enterTable = JS.array();
     push(enterTable, eventEnter(currentTable, context));
     call3(objGet(map, "add"), map, index, 0, enterTable);
     return;
   }
   if (tokenType == "tableRow" || tokenType == "tableDelimiterRow") {
-    pin(st, "pipe", true);
-    pin(st, "currentCell", undef());
-    lastCell = zeroRange();
-    cell = zeroRange();
-    cell[1] = index + 1;
-    pin(st, "lastCell", lastCell);
-    pin(st, "cell", cell);
-    if (objGet(st, "afterHead").truthy()) {
-      pin(st, "afterHead", false);
+    st.pipe = true;
+    st.currentCell = undef();
+    lastCell = new CellRange();
+    cell = new CellRange();
+    cell.start = index + 1;
+    st.lastCell = lastCell;
+    st.cell = cell;
+    if (st.afterHead) {
+      st.afterHead = false;
       JsValue currentBody = JS.object();
       objSet(currentBody, "type", "tableBody");
       objSet(currentBody, "start", copyPoint(objGet(token, "start")));
       objSet(currentBody, "end", copyPoint(objGet(token, "end")));
-      pin(st, "body", currentBody);
+      st.body = currentBody;
       JsValue enterBody = JS.array();
       push(enterBody, eventEnter(currentBody, context));
       call3(objGet(map, "add"), map, index, 0, enterBody);
     }
     if (tokenType == "tableDelimiterRow") {
-      pin(st, "rowKind", 2);
-    } else if (objGet(st, "body").truthy()) {
-      pin(st, "rowKind", 3);
+      st.rowKind = 2;
+    } else if (st.body.truthy()) {
+      st.rowKind = 3;
     } else {
-      pin(st, "rowKind", 1);
+      st.rowKind = 1;
     }
     return;
   }
   if (rowKind != 0 && (tokenType == tData || tokenType == "tableDelimiterMarker" || tokenType == "tableDelimiterFiller")) {
-    pin(st, "pipe", false);
-    if (jsInt(cell[2]) == 0) {
-      if (jsInt(lastCell[1]) != 0) {
-        cell[0] = cell[1];
+    st.pipe = false;
+    if (cell.contentStart == 0) {
+      if (lastCell.start != 0) {
+        cell.before = cell.start;
         currentCell = flushCell(map, context, lastCell, rowKind, undef(), currentCell);
-        lastCell = zeroRange();
-        pin(st, "lastCell", lastCell);
-        pin(st, "currentCell", currentCell);
+        lastCell = new CellRange();
+        st.lastCell = lastCell;
+        st.currentCell = currentCell;
       }
-      cell[2] = index;
+      cell.contentStart = index;
     }
     return;
   }
   if (tokenType == "tableCellDivider") {
-    if (objGet(st, "pipe").truthy()) {
-      pin(st, "pipe", false);
+    if (st.pipe) {
+      st.pipe = false;
       return;
     }
-    if (jsInt(lastCell[1]) != 0) {
-      cell[0] = cell[1];
+    if (lastCell.start != 0) {
+      cell.before = cell.start;
       currentCell = flushCell(map, context, lastCell, rowKind, undef(), currentCell);
-      pin(st, "currentCell", currentCell);
+      st.currentCell = currentCell;
     }
-    pin(st, "lastCell", cell);
-    cell = zeroRange();
-    cell[0] = objGet(st, "lastCell")[1];
-    cell[1] = index;
-    pin(st, "cell", cell);
+    st.lastCell = cell;
+    cell = new CellRange();
+    cell.before = st.lastCell.start;
+    cell.start = index;
+    st.cell = cell;
   }
 }
 
-void applyTableExit(JsValue st, JsValue context, JsValue map, int index, string tokenType) {
-  int rowKind = jsInt(objGet(st, "rowKind"));
-  JsValue lastCell = objGet(st, "lastCell");
-  JsValue cell = objGet(st, "cell");
-  JsValue currentCell = objGet(st, "currentCell");
+void applyTableExit(TableState st, JsValue context, JsValue map, int index, string tokenType) {
+  int rowKind = st.rowKind;
+  CellRange lastCell = st.lastCell;
+  CellRange cell = st.cell;
+  JsValue currentCell = st.currentCell;
   if (tokenType == "tableHead") {
-    pin(st, "afterHead", true);
-    pin(st, "lastTableEnd", index);
+    st.afterHead = true;
+    st.lastTableEnd = index;
     return;
   }
   if (tokenType == "tableRow" || tokenType == "tableDelimiterRow") {
-    pin(st, "lastTableEnd", index);
-    if (jsInt(lastCell[1]) != 0) {
-      cell[0] = cell[1];
+    st.lastTableEnd = index;
+    if (lastCell.start != 0) {
+      cell.before = cell.start;
       currentCell = flushCell(map, context, lastCell, rowKind, index, currentCell);
-      pin(st, "currentCell", currentCell);
-    } else if (jsInt(cell[1]) != 0) {
+      st.currentCell = currentCell;
+    } else if (cell.start != 0) {
       currentCell = flushCell(map, context, cell, rowKind, index, currentCell);
-      pin(st, "currentCell", currentCell);
+      st.currentCell = currentCell;
     }
-    pin(st, "rowKind", 0);
+    st.rowKind = 0;
     return;
   }
   if (rowKind != 0 && (tokenType == tData || tokenType == "tableDelimiterMarker" || tokenType == "tableDelimiterFiller")) {
-    cell[3] = index;
+    cell.contentEnd = index;
   }
 }
 
 JsValue resolveTable = JS.method2((JsValue _self, JsValue events, JsValue context) => {
-  JsValue st = newTableState();
+  TableState st = newTableState();
   JsValue map = createEditMap();
   int index = -1;
   int n = arrLen(events);
@@ -239,9 +243,9 @@ JsValue resolveTable = JS.method2((JsValue _self, JsValue events, JsValue contex
       applyTableExit(st, context, map, index, tokenType);
     }
   }
-  int lastTableEnd = jsInt(objGet(st, "lastTableEnd"));
+  int lastTableEnd = st.lastTableEnd;
   if (lastTableEnd != 0) {
-    flushTableEnd(map, context, lastTableEnd, objGet(st, "table"), objGet(st, "body"));
+    flushTableEnd(map, context, lastTableEnd, st.table, st.body);
   }
   call1(objGet(map, "consume"), map, objGet(context, "events"));
   index = -1;
@@ -260,50 +264,53 @@ JsValue resolveTable = JS.method2((JsValue _self, JsValue events, JsValue contex
 });
 
 JsValue tokenizeTable = JS.method3((JsValue self, JsValue effects, JsValue ok, JsValue nok) => {
-  JsValue st = JS.object();
-  objSet(st, "size", 0);
-  objSet(st, "sizeB", 0);
-  objSet(st, "seen", false);
+  int size = 0;
+  int sizeB = 0;
+  bool seen = false;
+  JsValue bodyRowData = undef();
+  JsValue bodyRowBreak = undef();
+  JsValue headDelimiterBefore = undef();
+  JsValue headDelimiterFiller = undef();
+  JsValue headRowData = undef();
+  JsValue headRowBreak = undef();
 
   JsValue bodyRowEscape = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cBackslash) || codeEq(code, cVerticalBar)) {
       fxConsume(effects, code);
-      return objGet(st, "bodyRowData");
+      return bodyRowData;
     }
-    return go(objGet(st, "bodyRowData"), code);
+    return go(bodyRowData, code);
   });
 
-  JsValue bodyRowData = JS.method1((JsValue _s, JsValue code) => {
+  bodyRowData = JS.method1((JsValue _s, JsValue code) => {
     if (isEof(code) || codeEq(code, cVerticalBar) || markdownLineEndingOrSpace(code)) {
       fxExit(effects, tData);
-      return go(objGet(st, "bodyRowBreak"), code);
+      return go(bodyRowBreak, code);
     }
     fxConsume(effects, code);
     if (codeEq(code, cBackslash)) {
       return bodyRowEscape;
     }
-    return objGet(st, "bodyRowData");
+    return bodyRowData;
   });
-  objSet(st, "bodyRowData", bodyRowData);
 
-  JsValue bodyRowBreak = JS.method1((JsValue _s, JsValue code) => {
+  bodyRowBreak = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cVerticalBar)) {
       fxEnter(effects, "tableCellDivider");
       fxConsume(effects, code);
       fxExit(effects, "tableCellDivider");
-      return objGet(st, "bodyRowBreak");
+      return bodyRowBreak;
     }
     if (isEof(code) || markdownLineEnding(code)) {
       fxExit(effects, "tableRow");
       return go(ok, code);
     }
     if (markdownSpace(code)) {
-      return go(factorySpace(effects, objGet(st, "bodyRowBreak"), tWhitespace, undef()), code);
+      return go(factorySpace(effects, bodyRowBreak, tWhitespace, undef()), code);
     }
     fxEnter(effects, tData);
     return go(bodyRowData, code);
   });
-  objSet(st, "bodyRowBreak", bodyRowBreak);
 
   JsValue bodyRowStart = JS.method1((JsValue _s, JsValue code) => {
     fxEnter(effects, "tableRow");
@@ -314,16 +321,16 @@ JsValue tokenizeTable = JS.method3((JsValue self, JsValue effects, JsValue ok, J
     return go(nok, code);
   });
 
-  JsValue headDelimiterBefore = JS.method1((JsValue _s, JsValue code) => {
-    return go(objGet(st, "headDelimiterBefore"), code);
+  headDelimiterBefore = JS.method1((JsValue _s, JsValue code) => {
+    return go(headDelimiterBefore, code);
   });
 
   JsValue headDelimiterCellAfter = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cVerticalBar)) {
-      return go(objGet(st, "headDelimiterBefore"), code);
+      return go(headDelimiterBefore, code);
     }
     if (isEof(code) || markdownLineEnding(code)) {
-      if (!objGet(st, "seen").truthy() || jsInt(objGet(st, "size")) != jsInt(objGet(st, "sizeB"))) {
+      if (!seen || size != sizeB) {
         return go(headDelimiterNok, code);
       }
       fxExit(effects, "tableDelimiterRow");
@@ -340,13 +347,13 @@ JsValue tokenizeTable = JS.method3((JsValue self, JsValue effects, JsValue ok, J
     return go(headDelimiterCellAfter, code);
   });
 
-  JsValue headDelimiterFiller = JS.method1((JsValue _s, JsValue code) => {
+  headDelimiterFiller = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cDash)) {
       fxConsume(effects, code);
-      return objGet(st, "headDelimiterFiller");
+      return headDelimiterFiller;
     }
     if (codeEq(code, cColon)) {
-      objSet(st, "seen", true);
+      seen = true;
       fxExit(effects, "tableDelimiterFiller");
       fxEnter(effects, "tableDelimiterMarker");
       fxConsume(effects, code);
@@ -356,7 +363,6 @@ JsValue tokenizeTable = JS.method3((JsValue self, JsValue effects, JsValue ok, J
     fxExit(effects, "tableDelimiterFiller");
     return go(headDelimiterRightAlignmentAfter, code);
   });
-  objSet(st, "headDelimiterFiller", headDelimiterFiller);
 
   JsValue headDelimiterLeftAlignmentAfter = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cDash)) {
@@ -368,15 +374,15 @@ JsValue tokenizeTable = JS.method3((JsValue self, JsValue effects, JsValue ok, J
 
   JsValue headDelimiterValueBefore = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cColon)) {
-      objSet(st, "sizeB", jsInt(objGet(st, "sizeB")) + 1);
-      objSet(st, "seen", true);
+      sizeB = sizeB + 1;
+      seen = true;
       fxEnter(effects, "tableDelimiterMarker");
       fxConsume(effects, code);
       fxExit(effects, "tableDelimiterMarker");
       return headDelimiterLeftAlignmentAfter;
     }
     if (codeEq(code, cDash)) {
-      objSet(st, "sizeB", jsInt(objGet(st, "sizeB")) + 1);
+      sizeB = sizeB + 1;
       return go(headDelimiterLeftAlignmentAfter, code);
     }
     if (isEof(code) || markdownLineEnding(code)) {
@@ -397,7 +403,7 @@ JsValue tokenizeTable = JS.method3((JsValue self, JsValue effects, JsValue ok, J
       return go(headDelimiterValueBefore, code);
     }
     if (codeEq(code, cVerticalBar)) {
-      objSet(st, "seen", true);
+      seen = true;
       fxEnter(effects, "tableCellDivider");
       fxConsume(effects, code);
       fxExit(effects, "tableCellDivider");
@@ -405,7 +411,7 @@ JsValue tokenizeTable = JS.method3((JsValue self, JsValue effects, JsValue ok, J
     }
     return go(headDelimiterNok, code);
   });
-  objSet(st, "headDelimiterBefore", headDelimiterBeforeReal);
+  headDelimiterBefore = headDelimiterBeforeReal;
 
   JsValue headDelimiterStart = JS.method1((JsValue _s, JsValue code) => {
     objSet(self, "interrupt", false);
@@ -414,7 +420,7 @@ JsValue tokenizeTable = JS.method3((JsValue self, JsValue effects, JsValue ok, J
       return go(nok, code);
     }
     fxEnter(effects, "tableDelimiterRow");
-    objSet(st, "seen", false);
+    seen = false;
     if (markdownSpace(code)) {
       JsValue max = kTabSize;
       JsValue disable = objGet(objGet(objGet(self, "parser"), "constructs"), "disable");
@@ -429,31 +435,30 @@ JsValue tokenizeTable = JS.method3((JsValue self, JsValue effects, JsValue ok, J
   JsValue headRowEscape = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cBackslash) || codeEq(code, cVerticalBar)) {
       fxConsume(effects, code);
-      return objGet(st, "headRowData");
+      return headRowData;
     }
-    return go(objGet(st, "headRowData"), code);
+    return go(headRowData, code);
   });
 
-  JsValue headRowData = JS.method1((JsValue _s, JsValue code) => {
+  headRowData = JS.method1((JsValue _s, JsValue code) => {
     if (isEof(code) || codeEq(code, cVerticalBar) || markdownLineEndingOrSpace(code)) {
       fxExit(effects, tData);
-      return go(objGet(st, "headRowBreak"), code);
+      return go(headRowBreak, code);
     }
     fxConsume(effects, code);
     if (codeEq(code, cBackslash)) {
       return headRowEscape;
     }
-    return objGet(st, "headRowData");
+    return headRowData;
   });
-  objSet(st, "headRowData", headRowData);
 
-  JsValue headRowBreak = JS.method1((JsValue _s, JsValue code) => {
+  headRowBreak = JS.method1((JsValue _s, JsValue code) => {
     if (isEof(code)) {
       return go(nok, code);
     }
     if (markdownLineEnding(code)) {
-      if (jsInt(objGet(st, "sizeB")) > 1) {
-        objSet(st, "sizeB", 0);
+      if (sizeB > 1) {
+        sizeB = 0;
         objSet(self, "interrupt", true);
         fxExit(effects, "tableRow");
         fxEnter(effects, tLineEnding);
@@ -464,31 +469,30 @@ JsValue tokenizeTable = JS.method3((JsValue self, JsValue effects, JsValue ok, J
       return go(nok, code);
     }
     if (markdownSpace(code)) {
-      return go(factorySpace(effects, objGet(st, "headRowBreak"), tWhitespace, undef()), code);
+      return go(factorySpace(effects, headRowBreak, tWhitespace, undef()), code);
     }
-    objSet(st, "sizeB", jsInt(objGet(st, "sizeB")) + 1);
-    if (objGet(st, "seen").truthy()) {
-      objSet(st, "seen", false);
-      objSet(st, "size", jsInt(objGet(st, "size")) + 1);
+    sizeB = sizeB + 1;
+    if (seen) {
+      seen = false;
+      size = size + 1;
     }
     if (codeEq(code, cVerticalBar)) {
       fxEnter(effects, "tableCellDivider");
       fxConsume(effects, code);
       fxExit(effects, "tableCellDivider");
-      objSet(st, "seen", true);
-      return objGet(st, "headRowBreak");
+      seen = true;
+      return headRowBreak;
     }
     fxEnter(effects, tData);
     return go(headRowData, code);
   });
-  objSet(st, "headRowBreak", headRowBreak);
 
   JsValue headRowStart = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cVerticalBar)) {
       return go(headRowBreak, code);
     }
-    objSet(st, "seen", true);
-    objSet(st, "sizeB", jsInt(objGet(st, "sizeB")) + 1);
+    seen = true;
+    sizeB = sizeB + 1;
     return go(headRowBreak, code);
   });
 
@@ -528,9 +532,7 @@ JsValue tokenizeTable = JS.method3((JsValue self, JsValue effects, JsValue ok, J
 
 export JsValue gfmTable() {
   JsValue table = JS.object("name", "table", "tokenize", tokenizeTable, "resolveAll", resolveTable);
-  JsValue ext = JS.object();
-  pin(ext, "flow", nullMap(table));
-  return ext;
+  return JS.object("flow", nullMap(table));
 }
 
 export JsValue gfmTableHtml() {

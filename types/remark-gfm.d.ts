@@ -1,20 +1,9 @@
-export interface RemarkGfmOptions {
-  singleTilde?: boolean | null
-  firstLineBlank?: boolean | null
-  tableCellPadding?: boolean | null
-  tablePipeAlign?: boolean | null
-  stringLength?: (value: string) => number
+export interface Options {
+  singleTilde?: boolean | null | undefined
+  firstLineBlank?: boolean | null | undefined
+  tableCellPadding?: boolean | null | undefined
+  tablePipeAlign?: boolean | null | undefined
+  stringLength?: ((value: string) => number) | null | undefined
 }
 
-export function remarkGfm(
-  this: {
-    data: () => {
-      micromarkExtensions?: unknown[]
-      fromMarkdownExtensions?: unknown[]
-      toMarkdownExtensions?: unknown[]
-    }
-  },
-  options?: RemarkGfmOptions | null,
-): undefined
-
-export default remarkGfm
+export default function remarkGfm(options?: Options | null | undefined): undefined

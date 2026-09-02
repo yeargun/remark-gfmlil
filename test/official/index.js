@@ -15,8 +15,7 @@ import stringWidth from 'string-width'
 test('remarkGfm', async function (t) {
   await t.test('should expose the public api', async function () {
     assert.deepEqual(Object.keys(await import('../../dist/remark-gfm.esm.js')).sort(), [
-      'default',
-      'remarkGfm'
+      'default'
     ])
   })
 

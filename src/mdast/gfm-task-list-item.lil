@@ -1,4 +1,4 @@
-import { arrLen, call0, call1, jsString, objectAssign, objGet, objSet, pin, push, replaceFn, undef } from "../host.lil";
+import { arrLen, call0, call1, jsString, objectAssign, objGet, objSet, replaceFn, undef } from "../host.lil";
 import { defaultHandlers } from "../to-markdown/handle.lil";
 
 JsValue exitCheck = JS.method1((JsValue self, JsValue token) => {
@@ -89,26 +89,16 @@ JsValue listItemWithTaskListItem = JS.methodRest((JsValue _self, JsValue args) =
 });
 
 export JsValue gfmTaskListItemFromMarkdown() {
-  JsValue exit = JS.object();
-  pin(exit, "taskListCheckValueChecked", exitCheck);
-  pin(exit, "taskListCheckValueUnchecked", exitCheck);
-  pin(exit, "paragraph", exitParagraphWithTaskListItem);
-  JsValue ext = JS.object();
-  pin(ext, "exit", exit);
-  return ext;
+  return JS.object("exit", JS.object(
+    "taskListCheckValueChecked", exitCheck,
+    "taskListCheckValueUnchecked", exitCheck,
+    "paragraph", exitParagraphWithTaskListItem
+  ));
 }
 
 export JsValue gfmTaskListItemToMarkdown() {
-  JsValue unsafe = JS.array();
-  JsValue u = JS.object();
-  objSet(u, "atBreak", true);
-  objSet(u, "character", "-");
-  objSet(u, "after", "[:|-]");
-  push(unsafe, u);
-  JsValue handlers = JS.object();
-  pin(handlers, "listItem", listItemWithTaskListItem);
-  JsValue ext = JS.object();
-  pin(ext, "unsafe", unsafe);
-  pin(ext, "handlers", handlers);
-  return ext;
+  return JS.object(
+    "unsafe", JS.array(JS.object("atBreak", true, "character", "-", "after", "[:|-]")),
+    "handlers", JS.object("listItem", listItemWithTaskListItem)
+  );
 }

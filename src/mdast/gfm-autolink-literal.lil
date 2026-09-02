@@ -1,4 +1,4 @@
-import { call1, call2, isNullish, jsInt, jsNull, jsString, objGet, objSet, pin, push, undef } from "../host.lil";
+import { call1, call2, isNullish, jsInt, jsNull, jsString, objGet, objSet, push, undef } from "../host.lil";
 import { unicodePunctuation, unicodeWhitespace } from "../util-character.lil";
 import { ccount } from "./ccount.lil";
 import { findAndReplace } from "./find-and-replace.lil";
@@ -90,7 +90,6 @@ JsValue findUrl = JS.methodRest((JsValue _self, JsValue args) => {
   JsValue child = JS.object();
   objSet(child, "type", "text");
   objSet(child, "value", protocol + jsString(parts[0]));
-  objSet(child, "position", undef());
   JsValue children = JS.array();
   push(children, child);
   JsValue result = JS.object();
@@ -98,12 +97,10 @@ JsValue findUrl = JS.methodRest((JsValue _self, JsValue args) => {
   objSet(result, "title", jsNull());
   objSet(result, "url", prefix + protocol + jsString(parts[0]));
   objSet(result, "children", children);
-  objSet(result, "position", undef());
   if (parts[1].truthy()) {
     JsValue extra = JS.object();
     objSet(extra, "type", "text");
     objSet(extra, "value", parts[1]);
-    objSet(extra, "position", undef());
     JsValue both = JS.array();
     push(both, result);
     push(both, extra);
@@ -122,7 +119,6 @@ JsValue findEmail = JS.methodRest((JsValue _self, JsValue args) => {
   JsValue child = JS.object();
   objSet(child, "type", "text");
   objSet(child, "value", atext + "@" + label);
-  objSet(child, "position", undef());
   JsValue children = JS.array();
   push(children, child);
   JsValue result = JS.object();
@@ -130,7 +126,6 @@ JsValue findEmail = JS.methodRest((JsValue _self, JsValue args) => {
   objSet(result, "title", jsNull());
   objSet(result, "url", "mailto:" + atext + "@" + label);
   objSet(result, "children", children);
-  objSet(result, "position", undef());
   return result;
 });
 
@@ -140,7 +135,6 @@ JsValue enterLiteralAutolink = JS.method1((JsValue self, JsValue token) => {
   objSet(node, "title", jsNull());
   objSet(node, "url", "");
   objSet(node, "children", JS.array());
-  objSet(node, "position", undef());
   call2(objGet(self, "enter"), self, node, token);
   return undef();
 });
@@ -197,55 +191,38 @@ JsValue transformGfmAutolinkLiterals = JS.method1((JsValue _self, JsValue tree) 
 });
 
 export JsValue gfmAutolinkLiteralFromMarkdown() {
-  JsValue transforms = JS.array();
-  push(transforms, transformGfmAutolinkLiterals);
-  JsValue enter = JS.object();
-  pin(enter, "literalAutolink", enterLiteralAutolink);
-  pin(enter, "literalAutolinkEmail", enterLiteralAutolinkValue);
-  pin(enter, "literalAutolinkHttp", enterLiteralAutolinkValue);
-  pin(enter, "literalAutolinkWww", enterLiteralAutolinkValue);
-  JsValue exit = JS.object();
-  pin(exit, "literalAutolink", exitLiteralAutolink);
-  pin(exit, "literalAutolinkEmail", exitLiteralAutolinkEmail);
-  pin(exit, "literalAutolinkHttp", exitLiteralAutolinkHttp);
-  pin(exit, "literalAutolinkWww", exitLiteralAutolinkWww);
-  JsValue ext = JS.object();
-  pin(ext, "transforms", transforms);
-  pin(ext, "enter", enter);
-  pin(ext, "exit", exit);
-  return ext;
+  return JS.object(
+    "transforms", JS.array(transformGfmAutolinkLiterals),
+    "enter", JS.object(
+      "literalAutolink", enterLiteralAutolink,
+      "literalAutolinkEmail", enterLiteralAutolinkValue,
+      "literalAutolinkHttp", enterLiteralAutolinkValue,
+      "literalAutolinkWww", enterLiteralAutolinkValue
+    ),
+    "exit", JS.object(
+      "literalAutolink", exitLiteralAutolink,
+      "literalAutolinkEmail", exitLiteralAutolinkEmail,
+      "literalAutolinkHttp", exitLiteralAutolinkHttp,
+      "literalAutolinkWww", exitLiteralAutolinkWww
+    )
+  );
 }
 
 export JsValue gfmAutolinkLiteralToMarkdown() {
   string inConstruct = "phrasing";
-  JsValue notInConstruct = JS.array();
-  push(notInConstruct, "autolink");
-  push(notInConstruct, "link");
-  push(notInConstruct, "image");
-  push(notInConstruct, "label");
-  JsValue unsafe = JS.array();
-  JsValue at = JS.object();
-  objSet(at, "character", "@");
-  objSet(at, "before", "[+\\-.\\w]");
-  objSet(at, "after", "[\\-.\\w]");
-  objSet(at, "inConstruct", inConstruct);
-  objSet(at, "notInConstruct", notInConstruct);
-  push(unsafe, at);
-  JsValue dot = JS.object();
-  objSet(dot, "character", ".");
-  objSet(dot, "before", "[Ww]");
-  objSet(dot, "after", "[\\-.\\w]");
-  objSet(dot, "inConstruct", inConstruct);
-  objSet(dot, "notInConstruct", notInConstruct);
-  push(unsafe, dot);
-  JsValue colon = JS.object();
-  objSet(colon, "character", ":");
-  objSet(colon, "before", "[ps]");
-  objSet(colon, "after", "\\/");
-  objSet(colon, "inConstruct", inConstruct);
-  objSet(colon, "notInConstruct", notInConstruct);
-  push(unsafe, colon);
-  JsValue ext = JS.object();
-  pin(ext, "unsafe", unsafe);
-  return ext;
+  JsValue notInConstruct = JS.array("autolink", "link", "image", "label");
+  return JS.object("unsafe", JS.array(
+    JS.object(
+      "character", "@", "before", "[+\\-.\\w]", "after", "[\\-.\\w]",
+      "inConstruct", inConstruct, "notInConstruct", notInConstruct
+    ),
+    JS.object(
+      "character", ".", "before", "[Ww]", "after", "[\\-.\\w]",
+      "inConstruct", inConstruct, "notInConstruct", notInConstruct
+    ),
+    JS.object(
+      "character", ":", "before", "[ps]", "after", "\\/",
+      "inConstruct", inConstruct, "notInConstruct", notInConstruct
+    )
+  ));
 }

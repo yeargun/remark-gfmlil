@@ -1,4 +1,4 @@
-import { optionOrEmpty, pin, push } from "../host.lil";
+import { optionOrEmpty } from "../host.lil";
 import { gfmAutolinkLiteralFromMarkdown, gfmAutolinkLiteralToMarkdown } from "./gfm-autolink-literal.lil";
 import { gfmFootnoteFromMarkdown, gfmFootnoteToMarkdown } from "./gfm-footnote.lil";
 import { gfmStrikethroughFromMarkdown, gfmStrikethroughToMarkdown } from "./gfm-strikethrough.lil";
@@ -6,24 +6,22 @@ import { gfmTableFromMarkdown, gfmTableToMarkdown } from "./gfm-table.lil";
 import { gfmTaskListItemFromMarkdown, gfmTaskListItemToMarkdown } from "./gfm-task-list-item.lil";
 
 export JsValue gfmFromMarkdown() {
-  JsValue list = JS.array();
-  push(list, gfmAutolinkLiteralFromMarkdown());
-  push(list, gfmFootnoteFromMarkdown());
-  push(list, gfmStrikethroughFromMarkdown());
-  push(list, gfmTableFromMarkdown());
-  push(list, gfmTaskListItemFromMarkdown());
-  return list;
+  return JS.array(
+    gfmAutolinkLiteralFromMarkdown(),
+    gfmFootnoteFromMarkdown(),
+    gfmStrikethroughFromMarkdown(),
+    gfmTableFromMarkdown(),
+    gfmTaskListItemFromMarkdown()
+  );
 }
 
 export JsValue gfmToMarkdown(JsValue options) {
   JsValue settings = optionOrEmpty(options);
-  JsValue extensions = JS.array();
-  push(extensions, gfmAutolinkLiteralToMarkdown());
-  push(extensions, gfmFootnoteToMarkdown(settings));
-  push(extensions, gfmStrikethroughToMarkdown());
-  push(extensions, gfmTableToMarkdown(settings));
-  push(extensions, gfmTaskListItemToMarkdown());
-  JsValue ext = JS.object();
-  pin(ext, "extensions", extensions);
-  return ext;
+  return JS.object("extensions", JS.array(
+    gfmAutolinkLiteralToMarkdown(),
+    gfmFootnoteToMarkdown(settings),
+    gfmStrikethroughToMarkdown(),
+    gfmTableToMarkdown(settings),
+    gfmTaskListItemToMarkdown()
+  ));
 }

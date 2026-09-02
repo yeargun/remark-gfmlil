@@ -1,4 +1,3 @@
-import { push } from "../host.lil";
 import { combineExtensions, combineHtmlExtensions } from "../util-combine-extensions.lil";
 import { gfmAutolinkLiteral, gfmAutolinkLiteralHtml } from "./gfm-autolink-literal.lil";
 import { gfmFootnote, gfmFootnoteHtml } from "./gfm-footnote.lil";
@@ -8,22 +7,22 @@ import { gfmTagfilterHtml } from "./gfm-tagfilter.lil";
 import { gfmTaskListItem, gfmTaskListItemHtml } from "./gfm-task-list-item.lil";
 
 export JsValue gfm(JsValue options) {
-  JsValue list = JS.array();
-  push(list, gfmAutolinkLiteral());
-  push(list, gfmFootnote());
-  push(list, gfmStrikethrough(options));
-  push(list, gfmTable());
-  push(list, gfmTaskListItem());
-  return combineExtensions(list);
+  return combineExtensions(JS.array(
+    gfmAutolinkLiteral(),
+    gfmFootnote(),
+    gfmStrikethrough(options),
+    gfmTable(),
+    gfmTaskListItem()
+  ));
 }
 
 export JsValue gfmHtml(JsValue options) {
-  JsValue list = JS.array();
-  push(list, gfmAutolinkLiteralHtml());
-  push(list, gfmFootnoteHtml(options));
-  push(list, gfmStrikethroughHtml());
-  push(list, gfmTableHtml());
-  push(list, gfmTagfilterHtml());
-  push(list, gfmTaskListItemHtml());
-  return combineHtmlExtensions(list);
+  return combineHtmlExtensions(JS.array(
+    gfmAutolinkLiteralHtml(),
+    gfmFootnoteHtml(options),
+    gfmStrikethroughHtml(),
+    gfmTableHtml(),
+    gfmTagfilterHtml(),
+    gfmTaskListItemHtml()
+  ));
 }

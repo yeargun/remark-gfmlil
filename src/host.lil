@@ -268,19 +268,11 @@ export JsValue copyPoint(JsValue point) {
 }
 
 export JsValue eventEnter(JsValue token, JsValue context) {
-  JsValue ev = JS.array();
-  push(ev, "enter");
-  push(ev, token);
-  push(ev, context);
-  return ev;
+  return JS.array("enter", token, context);
 }
 
 export JsValue eventExit(JsValue token, JsValue context) {
-  JsValue ev = JS.array();
-  push(ev, "exit");
-  push(ev, token);
-  push(ev, context);
-  return ev;
+  return JS.array("exit", token, context);
 }
 
 export string eventKind(JsValue ev) {
@@ -405,21 +397,8 @@ export void setCodeKey(JsValue map, int code, JsValue value) {
   JS.set(map, JS.string(code), value);
 }
 
-export void pin(JsValue obj, string key, JsValue value) {
-  objGet(obj, key);
-  JS.set(obj, key, value);
-}
-
-export void pinCode(JsValue obj, int code, JsValue value) {
-  objGet(obj, "_");
-  JS.set(obj, JS.string(code), value);
-}
-
 export JsValue nullMap(JsValue value) {
-  JsValue map = JS.object();
-  objGet(map, "null");
-  JS.set(map, "null", value);
-  return map;
+  return JS.object("null", value);
 }
 
 export JsValue jsNull() {

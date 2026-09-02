@@ -1,7 +1,4 @@
-import { pin } from "../host.lil";
 import { inlineCode } from "./inline-code.lil";
 import { listItem } from "./list-item.lil";
 
-export JsValue defaultHandlers = JS.object();
-pin(defaultHandlers, "inlineCode", inlineCode);
-pin(defaultHandlers, "listItem", listItem);
+export JsValue defaultHandlers = JS.object("inlineCode", inlineCode, "listItem", listItem);

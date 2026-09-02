@@ -1,14 +1,11 @@
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
-import { dirname, resolve } from "node:path"
-import { fileURLToPath } from "node:url"
+import { createRequire } from "node:module"
 import { describe, it } from "node:test"
+import { remark } from "remark"
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
-const source = readFileSync(resolve(root, "dist/remark-gfm.esm.js"), "utf8")
-const { remarkGfm, default: remarkGfmDefault } = await import(
-  new URL("../dist/remark-gfm.esm.js", import.meta.url)
-)
+const module = await import("@itslil/remark-gfm")
+const commonjs = createRequire(import.meta.url)("@itslil/remark-gfm")
+const remarkGfm = module.default
 
 function fakeProcessor() {
   const store = {}
@@ -23,11 +20,11 @@ function fakeProcessor() {
 }
 
 describe("@itslil/remark-gfm", () => {
-  it("exports remarkGfm and default", () => {
+  it("exposes the upstream public API", () => {
+    assert.deepEqual(Object.keys(module), ["default"])
+    assert.deepEqual(Object.keys(commonjs), ["default"])
     assert.equal(typeof remarkGfm, "function")
-    assert.equal(remarkGfmDefault, remarkGfm)
-    assert.match(source, / as remarkGfm[},]/)
-    assert.match(source, / as default[},]/)
+    assert.equal(typeof commonjs.default, "function")
   })
 
   it("registers micromark and mdast extensions", () => {
@@ -58,5 +55,16 @@ describe("@itslil/remark-gfm", () => {
     }
     processor.use(remarkGfm, { singleTilde: true })
     assert.equal(store.micromarkExtensions.length, 1)
+  })
+
+  it("does not start an email autolink after escaped atext", () => {
+    const processor = remark().use(remarkGfm)
+    const tree = processor.parse("a\\-b@c.co")
+    const link = tree.children[0].children[0]
+    assert.equal(link.type, "link")
+    assert.equal(link.url, "mailto:a-b@c.co")
+    assert.equal(link.children[0].value, "a-b@c.co")
+    assert.equal(Object.hasOwn(link, "position"), false)
+    assert.equal(String(processor.processSync("a\\-b@c.co")), "<a-b@c.co>\n")
   })
 })

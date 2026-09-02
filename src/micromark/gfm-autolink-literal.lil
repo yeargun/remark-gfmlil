@@ -1,4 +1,4 @@
-import { arrLen, fxAttempt, fxCheck, fxConsume, fxEnter, fxExit, fromCodePoint, go, isEof, jsInt, jsString, objGet, objSet, pin, push, setCodeKey, undef } from "../host.lil";
+import { arrLen, fxAttempt, fxCheck, fxConsume, fxEnter, fxExit, fromCodePoint, go, isEof, jsString, objGet, objSet, push, setCodeKey, undef } from "../host.lil";
 import { asciiAlpha, asciiAlphanumeric, asciiControl, markdownLineEndingOrSpace, unicodePunctuation, unicodeWhitespace } from "../util-character.lil";
 import { cAmpersand, cApostrophe, cAsterisk, cAtSign, cColon, cComma, cDash, cDigit0, cDot, cExclamationMark, cLeftCurlyBrace, cLeftParenthesis, cLeftSquareBracket, cLessThan, cLowercaseA, cLowercaseH, cLowercaseW, cPlusSign, cQuestionMark, cQuotationMark, cRightParenthesis, cRightSquareBracket, cSemicolon, cSlash, cTilde, cUnderscore, cUppercaseA, cUppercaseH, cUppercaseW, codeEq } from "../symbol/codes.lil";
 import { tLabelImage, tLabelLink } from "../symbol/types.lil";
@@ -13,6 +13,10 @@ JsValue previousWww = JS.method1((JsValue _self, JsValue code) => {
 
 JsValue previousProtocol = JS.method1((JsValue _self, JsValue code) => {
   return !asciiAlpha(code);
+});
+
+JsValue previousEmail = JS.method1((JsValue _self, JsValue code) => {
+  return !codeEq(code, cSlash) && !gfmAtext(code);
 });
 
 bool previousUnbalanced(JsValue events) {
@@ -66,31 +70,33 @@ JsValue tokenizeEmailDomainDotTrail = JS.method3((JsValue _self, JsValue effects
 });
 
 JsValue tokenizeTrail = JS.method3((JsValue _self, JsValue effects, JsValue ok, JsValue nok) => {
-  JsValue st = JS.object();
+  JsValue trailState = undef();
+  JsValue bracketAfter = undef();
+  JsValue characterReferenceInside = undef();
 
-  JsValue trailCharacterReferenceInside = JS.method1((JsValue _s, JsValue code) => {
+  characterReferenceInside = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cSemicolon)) {
       fxConsume(effects, code);
-      return objGet(st, "trail");
+      return trailState;
     }
     if (asciiAlpha(code)) {
       fxConsume(effects, code);
-      return objGet(st, "trailCharacterReferenceInside");
+      return characterReferenceInside;
     }
     return go(nok, code);
   });
 
   JsValue trailCharacterReferenceStart = JS.method1((JsValue _s, JsValue code) => {
     if (asciiAlpha(code)) {
-      return go(objGet(st, "trailCharacterReferenceInside"), code);
+      return go(characterReferenceInside, code);
     }
     return go(nok, code);
   });
 
-  JsValue trail = JS.method1((JsValue _s, JsValue code) => {
+  trailState = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cExclamationMark) || codeEq(code, cQuotationMark) || codeEq(code, cApostrophe) || codeEq(code, cRightParenthesis) || codeEq(code, cAsterisk) || codeEq(code, cComma) || codeEq(code, cDot) || codeEq(code, cColon) || codeEq(code, cSemicolon) || codeEq(code, cQuestionMark) || codeEq(code, cUnderscore) || codeEq(code, cTilde)) {
       fxConsume(effects, code);
-      return objGet(st, "trail");
+      return trailState;
     }
     if (codeEq(code, cAmpersand)) {
       fxConsume(effects, code);
@@ -98,7 +104,7 @@ JsValue tokenizeTrail = JS.method3((JsValue _self, JsValue effects, JsValue ok, 
     }
     if (codeEq(code, cRightSquareBracket)) {
       fxConsume(effects, code);
-      return objGet(st, "trailBracketAfter");
+      return bracketAfter;
     }
     if (codeEq(code, cLessThan) || isEof(code) || markdownLineEndingOrSpace(code) || unicodeWhitespace(code)) {
       return go(ok, code);
@@ -106,39 +112,36 @@ JsValue tokenizeTrail = JS.method3((JsValue _self, JsValue effects, JsValue ok, 
     return go(nok, code);
   });
 
-  JsValue trailBracketAfter = JS.method1((JsValue _s, JsValue code) => {
+  bracketAfter = JS.method1((JsValue _s, JsValue code) => {
     if (isEof(code) || codeEq(code, cLeftParenthesis) || codeEq(code, cLeftSquareBracket) || markdownLineEndingOrSpace(code) || unicodeWhitespace(code)) {
       return go(ok, code);
     }
-    return go(trail, code);
+    return go(trailState, code);
   });
 
-  objSet(st, "trail", trail);
-  objSet(st, "trailBracketAfter", trailBracketAfter);
-  objSet(st, "trailCharacterReferenceInside", trailCharacterReferenceInside);
-  return trail;
+  return trailState;
 });
 
 JsValue tokenizePath = JS.method3((JsValue _self, JsValue effects, JsValue ok, JsValue _nok) => {
-  JsValue st = JS.object();
-  objSet(st, "sizeOpen", 0);
-  objSet(st, "sizeClose", 0);
+  int sizeOpen = 0;
+  int sizeClose = 0;
+  JsValue pathInside = undef();
 
   JsValue pathAtPunctuation = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cRightParenthesis)) {
-      objSet(st, "sizeClose", jsInt(objGet(st, "sizeClose")) + 1);
+      sizeClose = sizeClose + 1;
     }
     fxConsume(effects, code);
-    return objGet(st, "pathInside");
+    return pathInside;
   });
 
-  JsValue pathInside = JS.method1((JsValue _s, JsValue code) => {
+  pathInside = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cLeftParenthesis)) {
-      objSet(st, "sizeOpen", jsInt(objGet(st, "sizeOpen")) + 1);
+      sizeOpen = sizeOpen + 1;
       fxConsume(effects, code);
-      return objGet(st, "pathInside");
+      return pathInside;
     }
-    if (codeEq(code, cRightParenthesis) && jsInt(objGet(st, "sizeClose")) < jsInt(objGet(st, "sizeOpen"))) {
+    if (codeEq(code, cRightParenthesis) && sizeClose < sizeOpen) {
       return go(pathAtPunctuation, code);
     }
     if (codeEq(code, cExclamationMark) || codeEq(code, cQuotationMark) || codeEq(code, cAmpersand) || codeEq(code, cApostrophe) || codeEq(code, cRightParenthesis) || codeEq(code, cAsterisk) || codeEq(code, cComma) || codeEq(code, cDot) || codeEq(code, cColon) || codeEq(code, cSemicolon) || codeEq(code, cLessThan) || codeEq(code, cQuestionMark) || codeEq(code, cRightSquareBracket) || codeEq(code, cUnderscore) || codeEq(code, cTilde)) {
@@ -148,21 +151,20 @@ JsValue tokenizePath = JS.method3((JsValue _self, JsValue effects, JsValue ok, J
       return go(ok, code);
     }
     fxConsume(effects, code);
-    return objGet(st, "pathInside");
+    return pathInside;
   });
 
-  objSet(st, "pathInside", pathInside);
   return pathInside;
 });
 
 JsValue tokenizeDomain = JS.method3((JsValue _self, JsValue effects, JsValue ok, JsValue nok) => {
-  JsValue st = JS.object();
-  objSet(st, "underscoreInLastSegment", false);
-  objSet(st, "underscoreInLastLastSegment", false);
-  objSet(st, "seen", false);
+  bool underscoreInLastSegment = false;
+  bool underscoreInLastLastSegment = false;
+  bool seen = false;
+  JsValue domainInside = undef();
 
   JsValue domainAfter = JS.method1((JsValue _s, JsValue code) => {
-    if (objGet(st, "underscoreInLastLastSegment").truthy() || objGet(st, "underscoreInLastSegment").truthy() || !objGet(st, "seen").truthy()) {
+    if (underscoreInLastLastSegment || underscoreInLastSegment || !seen) {
       return go(nok, code);
     }
     return go(ok, code);
@@ -170,34 +172,33 @@ JsValue tokenizeDomain = JS.method3((JsValue _self, JsValue effects, JsValue ok,
 
   JsValue domainAtPunctuation = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cUnderscore)) {
-      objSet(st, "underscoreInLastSegment", true);
+      underscoreInLastSegment = true;
     } else {
-      objSet(st, "underscoreInLastLastSegment", objGet(st, "underscoreInLastSegment"));
-      objSet(st, "underscoreInLastSegment", undef());
+      underscoreInLastLastSegment = underscoreInLastSegment;
+      underscoreInLastSegment = false;
     }
     fxConsume(effects, code);
-    return objGet(st, "domainInside");
+    return domainInside;
   });
 
-  JsValue domainInside = JS.method1((JsValue _s, JsValue code) => {
+  domainInside = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cDot) || codeEq(code, cUnderscore)) {
       return go(fxCheck(effects, trail, domainAfter, domainAtPunctuation), code);
     }
     if (isEof(code) || markdownLineEndingOrSpace(code) || unicodeWhitespace(code) || (!codeEq(code, cDash) && unicodePunctuation(code))) {
       return go(domainAfter, code);
     }
-    objSet(st, "seen", true);
+    seen = true;
     fxConsume(effects, code);
-    return objGet(st, "domainInside");
+    return domainInside;
   });
 
-  objSet(st, "domainInside", domainInside);
   return domainInside;
 });
 
 JsValue tokenizeWwwPrefix = JS.method3((JsValue _self, JsValue effects, JsValue ok, JsValue nok) => {
-  JsValue st = JS.object();
-  objSet(st, "size", 0);
+  int size = 0;
+  JsValue wwwPrefixInside = undef();
 
   JsValue wwwPrefixAfter = JS.method1((JsValue _s, JsValue code) => {
     if (isEof(code)) {
@@ -206,12 +207,11 @@ JsValue tokenizeWwwPrefix = JS.method3((JsValue _self, JsValue effects, JsValue 
     return go(ok, code);
   });
 
-  JsValue wwwPrefixInside = JS.method1((JsValue _s, JsValue code) => {
-    int size = jsInt(objGet(st, "size"));
+  wwwPrefixInside = JS.method1((JsValue _s, JsValue code) => {
     if ((codeEq(code, cUppercaseW) || codeEq(code, cLowercaseW)) && size < 3) {
-      objSet(st, "size", size + 1);
+      size = size + 1;
       fxConsume(effects, code);
-      return objGet(st, "wwwPrefixInside");
+      return wwwPrefixInside;
     }
     if (codeEq(code, cDot) && size == 3) {
       fxConsume(effects, code);
@@ -220,7 +220,6 @@ JsValue tokenizeWwwPrefix = JS.method3((JsValue _self, JsValue effects, JsValue 
     return go(nok, code);
   });
 
-  objSet(st, "wwwPrefixInside", wwwPrefixInside);
   return wwwPrefixInside;
 });
 
@@ -231,12 +230,13 @@ objSet(trail, "tokenize", tokenizeTrail);
 objSet(emailDomainDotTrail, "tokenize", tokenizeEmailDomainDotTrail);
 
 JsValue tokenizeEmailAutolink = JS.method3((JsValue self, JsValue effects, JsValue ok, JsValue nok) => {
-  JsValue st = JS.object();
-  objSet(st, "dot", false);
-  objSet(st, "data", false);
+  bool dot = false;
+  bool data = false;
+  JsValue emailDomain = undef();
+  JsValue atext = undef();
 
   JsValue emailDomainAfter = JS.method1((JsValue _s, JsValue code) => {
-    if (objGet(st, "data").truthy() && objGet(st, "dot").truthy() && asciiAlpha(objGet(self, "previous"))) {
+    if (data && dot && asciiAlpha(objGet(self, "previous"))) {
       fxExit(effects, "literalAutolinkEmail");
       fxExit(effects, "literalAutolink");
       return go(ok, code);
@@ -246,27 +246,26 @@ JsValue tokenizeEmailAutolink = JS.method3((JsValue self, JsValue effects, JsVal
 
   JsValue emailDomainDot = JS.method1((JsValue _s, JsValue code) => {
     fxConsume(effects, code);
-    objSet(st, "dot", true);
-    return objGet(st, "emailDomain");
+    dot = true;
+    return emailDomain;
   });
 
-  JsValue emailDomain = JS.method1((JsValue _s, JsValue code) => {
+  emailDomain = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cDot)) {
       return go(fxCheck(effects, emailDomainDotTrail, emailDomainAfter, emailDomainDot), code);
     }
     if (codeEq(code, cDash) || codeEq(code, cUnderscore) || asciiAlphanumeric(code)) {
-      objSet(st, "data", true);
+      data = true;
       fxConsume(effects, code);
-      return objGet(st, "emailDomain");
+      return emailDomain;
     }
     return go(emailDomainAfter, code);
   });
-  objSet(st, "emailDomain", emailDomain);
 
-  JsValue atext = JS.method1((JsValue _s, JsValue code) => {
+  atext = JS.method1((JsValue _s, JsValue code) => {
     if (gfmAtext(code)) {
       fxConsume(effects, code);
-      return objGet(st, "atext");
+      return atext;
     }
     if (codeEq(code, cAtSign)) {
       fxConsume(effects, code);
@@ -274,10 +273,9 @@ JsValue tokenizeEmailAutolink = JS.method3((JsValue self, JsValue effects, JsVal
     }
     return go(nok, code);
   });
-  objSet(st, "atext", atext);
 
   JsValue start = JS.method1((JsValue _s, JsValue code) => {
-    if (!gfmAtext(code) || previousUnbalanced(objGet(self, "events"))) {
+    if (!gfmAtext(code) || !go(previousEmail, objGet(self, "previous")).truthy() || previousUnbalanced(objGet(self, "events"))) {
       return go(nok, code);
     }
     fxEnter(effects, "literalAutolink");
@@ -306,9 +304,10 @@ JsValue tokenizeWwwAutolink = JS.method3((JsValue self, JsValue effects, JsValue
 });
 
 JsValue tokenizeProtocolAutolink = JS.method3((JsValue self, JsValue effects, JsValue ok, JsValue nok) => {
-  JsValue st = JS.object();
-  objSet(st, "buffer", "");
-  objSet(st, "seen", false);
+  string buffer = "";
+  bool seen = false;
+  JsValue protocolSlashesInside = undef();
+  JsValue protocolPrefixInside = undef();
 
   JsValue protocolAfter = JS.method1((JsValue _s, JsValue code) => {
     fxExit(effects, "literalAutolinkHttp");
@@ -323,25 +322,23 @@ JsValue tokenizeProtocolAutolink = JS.method3((JsValue self, JsValue effects, Js
     return go(fxAttempt(effects, domain, fxAttempt(effects, path, protocolAfter, nok), nok), code);
   });
 
-  JsValue protocolSlashesInside = JS.method1((JsValue _s, JsValue code) => {
+  protocolSlashesInside = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cSlash)) {
       fxConsume(effects, code);
-      if (objGet(st, "seen").truthy()) {
+      if (seen) {
         return afterProtocol;
       }
-      objSet(st, "seen", true);
-      return objGet(st, "protocolSlashesInside");
+      seen = true;
+      return protocolSlashesInside;
     }
     return go(nok, code);
   });
-  objSet(st, "protocolSlashesInside", protocolSlashesInside);
 
-  JsValue protocolPrefixInside = JS.method1((JsValue _s, JsValue code) => {
-    string buffer = jsString(objGet(st, "buffer"));
+  protocolPrefixInside = JS.method1((JsValue _s, JsValue code) => {
     if (asciiAlpha(code) && buffer.length < 5) {
-      objSet(st, "buffer", buffer + fromCodePoint(code));
+      buffer = buffer + fromCodePoint(code);
       fxConsume(effects, code);
-      return objGet(st, "protocolPrefixInside");
+      return protocolPrefixInside;
     }
     if (codeEq(code, cColon)) {
       string protocol = buffer.toLowerCase();
@@ -352,13 +349,12 @@ JsValue tokenizeProtocolAutolink = JS.method3((JsValue self, JsValue effects, Js
     }
     return go(nok, code);
   });
-  objSet(st, "protocolPrefixInside", protocolPrefixInside);
 
   JsValue protocolStart = JS.method1((JsValue _s, JsValue code) => {
     if ((codeEq(code, cUppercaseH) || codeEq(code, cLowercaseH)) && go(previousProtocol, objGet(self, "previous")).truthy() && !previousUnbalanced(objGet(self, "events"))) {
       fxEnter(effects, "literalAutolink");
       fxEnter(effects, "literalAutolinkHttp");
-      objSet(st, "buffer", fromCodePoint(code));
+      buffer = fromCodePoint(code);
       fxConsume(effects, code);
       return protocolPrefixInside;
     }
@@ -370,6 +366,7 @@ JsValue tokenizeProtocolAutolink = JS.method3((JsValue self, JsValue effects, Js
 JsValue emailAutolink = JS.object();
 objSet(emailAutolink, "name", "emailAutolink");
 objSet(emailAutolink, "tokenize", tokenizeEmailAutolink);
+objSet(emailAutolink, "previous", previousEmail);
 
 JsValue wwwAutolink = JS.object();
 objSet(wwwAutolink, "name", "wwwAutolink");
@@ -408,9 +405,7 @@ setCodeKey(text, cUppercaseW, wList);
 setCodeKey(text, cLowercaseW, wList);
 
 export JsValue gfmAutolinkLiteral() {
-  JsValue ext = JS.object();
-  pin(ext, "text", text);
-  return ext;
+  return JS.object("text", text);
 }
 
 export JsValue gfmAutolinkLiteralHtml() {

@@ -1,4 +1,4 @@
-import { arrLen, call1, copyPoint, eventEnter, eventExit, fxConsume, fxEnter, fxExit, go, isNullish, jsInt, nullMap, objGet, objSet, optionOrEmpty, pin, pinCode, push, slice2, toJsBool, undef } from "../host.lil";
+import { arrLen, call1, copyPoint, eventEnter, eventExit, fxConsume, fxEnter, fxExit, go, isNullish, jsInt, nullMap, objGet, objSet, optionOrEmpty, push, setCodeKey, slice2, toJsBool, undef } from "../host.lil";
 import { splice } from "../util-chunked.lil";
 import { classifyCharacter } from "../util-classify-character.lil";
 import { resolveAll } from "../util-resolve-all.lil";
@@ -88,20 +88,20 @@ export JsValue gfmStrikethrough(JsValue options) {
   JsValue tokenizeStrikethrough = JS.method3((JsValue self, JsValue effects, JsValue ok, JsValue nok) => {
     JsValue previous = objGet(self, "previous");
     JsValue events = objGet(self, "events");
-    JsValue st = JS.object();
-    objSet(st, "size", 0);
+    int size = 0;
+    JsValue more = undef();
 
-    JsValue more = JS.method1((JsValue _s, JsValue code) => {
+    more = JS.method1((JsValue _s, JsValue code) => {
       JsValue before = classifyCharacter(previous);
       if (codeEq(code, cTilde)) {
-        if (jsInt(objGet(st, "size")) > 1) {
+        if (size > 1) {
           return go(nok, code);
         }
         fxConsume(effects, code);
-        objSet(st, "size", jsInt(objGet(st, "size")) + 1);
-        return objGet(st, "more");
+        size = size + 1;
+        return more;
       }
-      if (jsInt(objGet(st, "size")) < 2 && !single) {
+      if (size < 2 && !single) {
         return go(nok, code);
       }
       JsValue token = fxExit(effects, "strikethroughSequenceTemporary");
@@ -118,7 +118,6 @@ export JsValue gfmStrikethrough(JsValue options) {
       objSet(token, "_close", toJsBool(close));
       return go(ok, code);
     });
-    objSet(st, "more", more);
 
     JsValue start = JS.method1((JsValue _s, JsValue code) => {
       if (codeEq(previous, cTilde) && arrLen(events) > 0 && objGet(events[arrLen(events) - 1][1], "type") != tCharacterEscape) {
@@ -133,32 +132,23 @@ export JsValue gfmStrikethrough(JsValue options) {
   JsValue tokenizer = JS.object("name", "strikethrough", "tokenize", tokenizeStrikethrough, "resolveAll", resolveAllStrikethrough);
 
   JsValue text = JS.object();
-  pinCode(text, cTilde, tokenizer);
-  JsValue inside = JS.array();
-  push(inside, tokenizer);
-  JsValue markers = JS.array();
-  push(markers, cTilde);
-
-  JsValue ext = JS.object();
-  pin(ext, "text", text);
-  pin(ext, "insideSpan", nullMap(inside));
-  pin(ext, "attentionMarkers", nullMap(markers));
-  return ext;
+  setCodeKey(text, cTilde, tokenizer);
+  return JS.object(
+    "text", text,
+    "insideSpan", nullMap(JS.array(tokenizer)),
+    "attentionMarkers", nullMap(JS.array(cTilde))
+  );
 }
 
 export JsValue gfmStrikethroughHtml() {
-  JsValue enter = JS.object();
-  pin(enter, "strikethrough", JS.method0((JsValue self) => {
-    call1(objGet(self, "tag"), self, "<del>");
-    return undef();
-  }));
-  JsValue exit = JS.object();
-  pin(exit, "strikethrough", JS.method0((JsValue self) => {
-    call1(objGet(self, "tag"), self, "</del>");
-    return undef();
-  }));
-  JsValue html = JS.object();
-  pin(html, "enter", enter);
-  pin(html, "exit", exit);
-  return html;
+  return JS.object(
+    "enter", JS.object("strikethrough", JS.method0((JsValue self) => {
+      call1(objGet(self, "tag"), self, "<del>");
+      return undef();
+    })),
+    "exit", JS.object("strikethrough", JS.method0((JsValue self) => {
+      call1(objGet(self, "tag"), self, "</del>");
+      return undef();
+    }))
+  );
 }

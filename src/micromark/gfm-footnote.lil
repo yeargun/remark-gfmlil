@@ -1,4 +1,4 @@
-import { arrLen, call2, copyPoint, eventEnter, eventExit, fxAttempt, fxCheck, fxConsume, fxEnter, fxExit, go, includesVal, isEof, isNullish, jsInt, jsString, nowOf, objGet, objSet, pin, pinCode, push, setTokenType, sliceSer, undef } from "../host.lil";
+import { arrLen, call2, copyPoint, eventEnter, eventExit, fxAttempt, fxCheck, fxConsume, fxEnter, fxExit, go, includesVal, isEof, isNullish, jsInt, jsString, nowOf, objGet, objSet, push, setCodeKey, setTokenType, sliceSer, undef } from "../host.lil";
 import { splice } from "../util-chunked.lil";
 import { factorySpace } from "../factory-space.lil";
 import { markdownLineEndingOrSpace } from "../util-character.lil";
@@ -141,22 +141,21 @@ JsValue resolveToPotentialGfmFootnoteCall = JS.method2((JsValue _self, JsValue e
 
 JsValue tokenizeGfmFootnoteCall = JS.method3((JsValue self, JsValue effects, JsValue ok, JsValue nok) => {
   JsValue defined = gfmFootnotesOf(self);
-  JsValue st = JS.object();
-  objSet(st, "size", 0);
-  objSet(st, "data", false);
+  int size = 0;
+  bool data = false;
+  JsValue callData = undef();
 
   JsValue callEscape = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cLeftSquareBracket) || codeEq(code, cBackslash) || codeEq(code, cRightSquareBracket)) {
       fxConsume(effects, code);
-      objSet(st, "size", jsInt(objGet(st, "size")) + 1);
-      return objGet(st, "callData");
+      size = size + 1;
+      return callData;
     }
-    return go(objGet(st, "callData"), code);
+    return go(callData, code);
   });
 
-  JsValue callData = JS.method1((JsValue _s, JsValue code) => {
-    int size = jsInt(objGet(st, "size"));
-    if (size > kLinkReferenceSizeMax || (codeEq(code, cRightSquareBracket) && !objGet(st, "data").truthy()) || isEof(code) || codeEq(code, cLeftSquareBracket) || markdownLineEndingOrSpace(code)) {
+  callData = JS.method1((JsValue _s, JsValue code) => {
+    if (size > kLinkReferenceSizeMax || (codeEq(code, cRightSquareBracket) && !data) || isEof(code) || codeEq(code, cLeftSquareBracket) || markdownLineEndingOrSpace(code)) {
       return go(nok, code);
     }
     if (codeEq(code, cRightSquareBracket)) {
@@ -172,16 +171,15 @@ JsValue tokenizeGfmFootnoteCall = JS.method3((JsValue self, JsValue effects, JsV
       return ok;
     }
     if (!markdownLineEndingOrSpace(code)) {
-      objSet(st, "data", true);
+      data = true;
     }
-    objSet(st, "size", size + 1);
+    size = size + 1;
     fxConsume(effects, code);
     if (codeEq(code, cBackslash)) {
       return callEscape;
     }
-    return objGet(st, "callData");
+    return callData;
   });
-  objSet(st, "callData", callData);
 
   JsValue callStart = JS.method1((JsValue _s, JsValue code) => {
     if (!codeEq(code, cCaret)) {
@@ -208,10 +206,10 @@ JsValue tokenizeGfmFootnoteCall = JS.method3((JsValue self, JsValue effects, JsV
 
 JsValue tokenizeDefinitionStart = JS.method3((JsValue self, JsValue effects, JsValue ok, JsValue nok) => {
   JsValue defined = gfmFootnotesOf(self);
-  JsValue st = JS.object();
-  objSet(st, "size", 0);
-  objSet(st, "data", false);
-  objSet(st, "identifier", "");
+  int size = 0;
+  bool data = false;
+  string identifier = "";
+  JsValue labelInside = undef();
 
   JsValue whitespaceAfter = JS.method1((JsValue _s, JsValue code) => {
     return go(ok, code);
@@ -222,7 +220,6 @@ JsValue tokenizeDefinitionStart = JS.method3((JsValue self, JsValue effects, JsV
       fxEnter(effects, "definitionMarker");
       fxConsume(effects, code);
       fxExit(effects, "definitionMarker");
-      string identifier = jsString(objGet(st, "identifier"));
       if (!includesVal(defined, identifier)) {
         push(defined, identifier);
       }
@@ -234,21 +231,20 @@ JsValue tokenizeDefinitionStart = JS.method3((JsValue self, JsValue effects, JsV
   JsValue labelEscape = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cLeftSquareBracket) || codeEq(code, cBackslash) || codeEq(code, cRightSquareBracket)) {
       fxConsume(effects, code);
-      objSet(st, "size", jsInt(objGet(st, "size")) + 1);
-      return objGet(st, "labelInside");
+      size = size + 1;
+      return labelInside;
     }
-    return go(objGet(st, "labelInside"), code);
+    return go(labelInside, code);
   });
 
-  JsValue labelInside = JS.method1((JsValue _s, JsValue code) => {
-    int size = jsInt(objGet(st, "size"));
-    if (size > kLinkReferenceSizeMax || (codeEq(code, cRightSquareBracket) && !objGet(st, "data").truthy()) || isEof(code) || codeEq(code, cLeftSquareBracket) || markdownLineEndingOrSpace(code)) {
+  labelInside = JS.method1((JsValue _s, JsValue code) => {
+    if (size > kLinkReferenceSizeMax || (codeEq(code, cRightSquareBracket) && !data) || isEof(code) || codeEq(code, cLeftSquareBracket) || markdownLineEndingOrSpace(code)) {
       return go(nok, code);
     }
     if (codeEq(code, cRightSquareBracket)) {
       fxExit(effects, tChunkString);
       JsValue token = fxExit(effects, "gfmFootnoteDefinitionLabelString");
-      objSet(st, "identifier", normalizeIdentifier(jsString(sliceSer(self, token))));
+      identifier = normalizeIdentifier(jsString(sliceSer(self, token)));
       fxEnter(effects, "gfmFootnoteDefinitionLabelMarker");
       fxConsume(effects, code);
       fxExit(effects, "gfmFootnoteDefinitionLabelMarker");
@@ -256,16 +252,15 @@ JsValue tokenizeDefinitionStart = JS.method3((JsValue self, JsValue effects, JsV
       return labelAfter;
     }
     if (!markdownLineEndingOrSpace(code)) {
-      objSet(st, "data", true);
+      data = true;
     }
-    objSet(st, "size", size + 1);
+    size = size + 1;
     fxConsume(effects, code);
     if (codeEq(code, cBackslash)) {
       return labelEscape;
     }
-    return objGet(st, "labelInside");
+    return labelInside;
   });
-  objSet(st, "labelInside", labelInside);
 
   JsValue labelAtMarker = JS.method1((JsValue _s, JsValue code) => {
     if (codeEq(code, cCaret)) {
@@ -293,24 +288,21 @@ JsValue tokenizeDefinitionStart = JS.method3((JsValue self, JsValue effects, JsV
 });
 
 export JsValue gfmFootnote() {
-  JsValue cont = JS.object();
-  pin(cont, "tokenize", tokenizeDefinitionContinuation);
+  JsValue cont = JS.object("tokenize", tokenizeDefinitionContinuation);
   JsValue def = JS.object("name", "gfmFootnoteDefinition", "tokenize", tokenizeDefinitionStart, "continuation", cont, "exit", gfmFootnoteDefinitionEnd);
   JsValue document = JS.object();
-  pinCode(document, cLeftSquareBracket, def);
+  setCodeKey(document, cLeftSquareBracket, def);
   JsValue call = JS.object("name", "gfmFootnoteCall", "tokenize", tokenizeGfmFootnoteCall);
-  JsValue potential = JS.object();
-  pin(potential, "name", "gfmPotentialFootnoteCall");
-  pin(potential, "add", "after");
-  pin(potential, "tokenize", tokenizePotentialGfmFootnoteCall);
-  pin(potential, "resolveTo", resolveToPotentialGfmFootnoteCall);
+  JsValue potential = JS.object(
+    "name", "gfmPotentialFootnoteCall",
+    "add", "after",
+    "tokenize", tokenizePotentialGfmFootnoteCall,
+    "resolveTo", resolveToPotentialGfmFootnoteCall
+  );
   JsValue text = JS.object();
-  pinCode(text, cLeftSquareBracket, call);
-  pinCode(text, cRightSquareBracket, potential);
-  JsValue ext = JS.object();
-  pin(ext, "document", document);
-  pin(ext, "text", text);
-  return ext;
+  setCodeKey(text, cLeftSquareBracket, call);
+  setCodeKey(text, cRightSquareBracket, potential);
+  return JS.object("document", document, "text", text);
 }
 
 export JsValue gfmFootnoteHtml(JsValue _options) {
