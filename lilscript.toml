@@ -27,6 +27,10 @@ wide_single_use_collapse = true
 # re-measured rather than trusted. (The five largest ports do not respond to it
 # at all: their width is clamped by the candidate limit before the beam binds.)
 candidate_beam_width = 20
+# 8.20 (measured, fleet sweep of four budgets): the candidate byte budget is a
+# basin dial, not a depth dial -- 1 MiB (default) +0, 2 MiB -17, 8 MiB +192, 16 MiB +225.
+# Re-measure it after any emitter change.
+candidate_byte_budget = 2097152
 
 [mangle]
 identifiers = true
