@@ -40,6 +40,9 @@ rematerialize_member_reads = true
 # Required by the rematerialisation above: a duplicated property read must
 # not be able to run a getter twice. This port reads plain data.
 assume_pure_property_reads = true
+# 8.23 (measured, fleet): the terminal idiom-directed naming search is -8
+# Brotli here; +95 on micromarklil and nothing on the other seven.
+idiom_directed_naming = true
 
 [mangle]
 identifiers = true
