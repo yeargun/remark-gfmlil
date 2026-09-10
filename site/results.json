@@ -12,7 +12,7 @@
   "spec": {
     "total": 19,
     "pass": 19,
-    "label": "tests passing"
+    "label": "repository checks"
   },
   "play": {
     "kind": "md-plugin",
@@ -71,7 +71,7 @@
       "raw": 33051,
       "gzip9": 11488,
       "brotli11": 10263,
-      "note": "Fresh packaged ESM, rebuilt with compiler 63c2896a71.",
+      "note": "ESM output from LilScript 63c2896.",
       "primary": true,
       "measuredAt": "2026-09-10T13:59:45Z",
       "artifactSha256": "a8d896ef1f50bcbb93d9410b633d11f2bf445b3035dfe8f33816db333891f724"
@@ -82,7 +82,7 @@
       "raw": 34319,
       "gzip9": 12221,
       "brotli11": 10849,
-      "note": "Same source, extern_fields false; diagnostic only",
+      "note": "ESM output from LilScript 63c2896.",
       "measuredAt": "2026-09-10T13:59:45Z",
       "artifactSha256": "99aaf5844698408dc84cbaa307b5ac818eac1504129bc0a66297b805ade61d8f"
     }
@@ -99,7 +99,5 @@
       "documentMs": 0.008042000001296401
     }
   ],
-  "sizeMeasuredAt": "2026-09-10T13:59:45Z",
-  "buildAudit": "./build-audit.json",
-  "runtimeEvidenceStatus": "Historical; runtime throughput was not republished as a measurement of this compiler."
+  "sizeMeasuredAt": "2026-09-10T13:59:45Z"
 }
