@@ -1,0 +1,33 @@
+{
+  "source": {
+    "repository": "https://github.com/remarkjs/remark-gfm.git",
+    "commit": "109972e8a773bf5dac1d6d2da0776557f36971aa",
+    "package": "remark-gfm",
+    "version": "4.0.1",
+    "directory": "."
+  },
+  "portSource": {
+    "commit": "cb2550734ffc39296c9fb87d77665ec4ea06eba0"
+  },
+  "compilerCommit": "4dc4e3337d9ffd758d65e3852682d6e13d9331c1",
+  "install": [
+    "npm",
+    "install",
+    "--ignore-scripts",
+    "--no-audit",
+    "--no-fund"
+  ],
+  "setup": [],
+  "build": [
+    "npm",
+    "run",
+    "build"
+  ],
+  "clean": [],
+  "entry": "index.js",
+  "defaultExport": true,
+  "external": [],
+  "esmScope": "remark-gfm@4.0.1 public ESM runtime graph; dependency installation excluded; this is a comparison bundle build, not the upstream vendor release pipeline",
+  "lilscriptBuild": "node scripts/build.mjs --compile --force",
+  "test": "npm run check:types && node --test test/*.test.mjs test/official/index.js"
+}

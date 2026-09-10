@@ -1,41 +1,59 @@
 {
-  "schemaVersion": 1,
-  "measuredAt": "2026-09-10T13:59:45Z",
+  "schemaVersion": 2,
+  "measuredAt": "2026-09-10T20:42:45Z",
   "name": "remark-gfmlil",
   "compiler": {
-    "commit": "63c2896a71e60cbcca7870fe979f9d6ecaff3452",
-    "sha256": "2319462ef7d858c8e2a5a767260aa4f80d325e0045afa0cc86cc122d1299b059",
-    "profile": "release",
-    "dirty": false
+    "commit": "4dc4e3337d9ffd758d65e3852682d6e13d9331c1",
+    "sha256": "0616048498eb9eb2e4bd75b39e8e6a083733ada647e16108edfee30ad183beeb"
   },
   "upstream": {
     "package": "remark-gfm",
-    "version": "4.0.1"
+    "version": "4.0.1",
+    "repository": "https://github.com/remarkjs/remark-gfm.git",
+    "commit": "109972e8a773bf5dac1d6d2da0776557f36971aa"
   },
-  "scope": "remark-gfm@4.0.1 public ESM runtime graph; dependency installation excluded; this is a comparison bundle build, not the upstream vendor release pipeline",
-  "compatibility": "Repository checks pass.",
+  "scope": "remark-gfm@4.0.1 public ESM runtime graph. Original ESM assembled from the pinned Git source build.",
+  "compatibility": "Runtime checks: 19/19 pass.",
   "tests": {
     "pass": 19,
     "total": 19
   },
   "buildComplete": true,
   "machine": {
+    "provider": "Azure",
+    "instanceClass": "Standard_D16als_v7",
     "cpu": "AMD EPYC 9V45 96-Core Processor",
     "logicalCpus": 16,
     "memoryBytes": 33648435200,
     "os": "Ubuntu 24.04.4 LTS",
-    "node": "v22.23.2",
-    "rayonThreads": 16,
-    "provider": "Azure",
-    "instanceClass": "Standard_D16als_v7"
+    "kernel": "6.17.0-1022-azure",
+    "node": "v24.11.1",
+    "rayonThreads": 8,
+    "loadAtStart": [
+      3.24658203125,
+      2.68505859375,
+      2.7265625
+    ],
+    "loadAtEnd": [
+      2.7119140625,
+      3.037109375,
+      2.88037109375
+    ]
   },
   "build": {
-    "compilerSeconds": 61.393630504608154,
-    "packageSeconds": 68.96748004900019,
-    "originalSeconds": 0.274198174,
-    "packageScope": "node scripts/build.mjs --compile --force; 2 successful compiler invocations plus package generation.",
-    "originalScope": "remark-gfm@4.0.1 public ESM runtime graph; dependency installation excluded; this is a comparison bundle build, not the upstream vendor release pipeline",
-    "protocol": "Same shared worker for both lanes; one fresh LilScript package build; median of three sequential upstream ESM builds (PlayCanvas records one native reference build). Outside compiler jobs were observed in the pool, so contention is not excluded. Dependencies, tests and compression measurement are outside these build times."
+    "compilerSeconds": null,
+    "packageSeconds": 68.5472278090001,
+    "originalSeconds": 1.4163238990004174,
+    "originalEsmSeconds": 0.18698971100000006,
+    "packageScope": "node scripts/build.mjs --compile --force",
+    "originalScope": "npm run build",
+    "protocol": {
+      "repetitions": 3,
+      "cleanOutputs": true,
+      "dependencyInstallationTimedSeparately": true,
+      "sourceArchives": "Pinned Git checkouts; original repository package build commands, followed by production ESM assembly.",
+      "workerUse": "Both implementations use the same machine and Node version. This shared build pool also runs unrelated jobs; timings are contextual wall times, with CPU time recorded separately."
+    }
   },
   "esm": {
     "lilscript": {
@@ -52,5 +70,104 @@
       "sha256": "510957b346960db6b6d2a0ebfb89f430c24d9eb987326487bac92f7f179161b6",
       "file": "./esm-comparison/original.js"
     }
+  },
+  "sourceBuild": {
+    "original": {
+      "complete": true,
+      "medianSeconds": 1.4163238990004174,
+      "minimumSeconds": 1.3663753820001148,
+      "maximumSeconds": 1.4164815049998651,
+      "samples": [
+        {
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "wallSeconds": 1.4163238990004174,
+          "cpuSeconds": 2.65183,
+          "exitCode": 0,
+          "timedOut": false,
+          "log": "original-build-1.log",
+          "logSha256": "ea7e814d8b87db686ee2362b1cf024f4b985008988d04bb5c01b712b7f803b0e"
+        },
+        {
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "wallSeconds": 1.4164815049998651,
+          "cpuSeconds": 2.624551000000001,
+          "exitCode": 0,
+          "timedOut": false,
+          "log": "original-build-2.log",
+          "logSha256": "ea7e814d8b87db686ee2362b1cf024f4b985008988d04bb5c01b712b7f803b0e"
+        },
+        {
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "wallSeconds": 1.3663753820001148,
+          "cpuSeconds": 2.61695799999998,
+          "exitCode": 0,
+          "timedOut": false,
+          "log": "original-build-3.log",
+          "logSha256": "ea7e814d8b87db686ee2362b1cf024f4b985008988d04bb5c01b712b7f803b0e"
+        }
+      ]
+    },
+    "lilscript": {
+      "complete": true,
+      "medianSeconds": 68.5472278090001,
+      "minimumSeconds": 68.54676289899999,
+      "maximumSeconds": 68.59835546100021,
+      "samples": [
+        {
+          "command": [
+            "bash",
+            "-c",
+            "node scripts/build.mjs --compile --force"
+          ],
+          "wallSeconds": 68.5472278090001,
+          "cpuSeconds": 247.70206400000004,
+          "exitCode": 0,
+          "timedOut": false,
+          "log": "lilscript-build-1.log",
+          "logSha256": "2f27c004367c310830f76be88420e11887de5c3f833fd99f79c59e7a22f844f8"
+        },
+        {
+          "command": [
+            "bash",
+            "-c",
+            "node scripts/build.mjs --compile --force"
+          ],
+          "wallSeconds": 68.54676289899999,
+          "cpuSeconds": 246.64569000000003,
+          "exitCode": 0,
+          "timedOut": false,
+          "log": "lilscript-build-2.log",
+          "logSha256": "2f27c004367c310830f76be88420e11887de5c3f833fd99f79c59e7a22f844f8"
+        },
+        {
+          "command": [
+            "bash",
+            "-c",
+            "node scripts/build.mjs --compile --force"
+          ],
+          "wallSeconds": 68.59835546100021,
+          "cpuSeconds": 247.232493,
+          "exitCode": 0,
+          "timedOut": false,
+          "log": "lilscript-build-3.log",
+          "logSha256": "2f27c004367c310830f76be88420e11887de5c3f833fd99f79c59e7a22f844f8"
+        }
+      ]
+    },
+    "scopeNote": "The original command builds the upstream monorepo\u2019s generated types/checks; the byte comparison includes the selected package runtime graph.",
+    "cleanOutputs": true,
+    "installationExcluded": true
   }
 }

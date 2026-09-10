@@ -240,12 +240,38 @@
   "publicationSourceFingerprint": "50e8072b475f30e13b3ea2963576a284bf2cc5bb5890c4b9bde3c3131caa8769",
   "comparisonArtifacts": [
     {
+      "path": "site/esm-comparison/original.js",
+      "sha256": "510957b346960db6b6d2a0ebfb89f430c24d9eb987326487bac92f7f179161b6"
+    },
+    {
       "path": "site/esm-comparison/lilscript.js",
       "sha256": "a8d896ef1f50bcbb93d9410b633d11f2bf445b3035dfe8f33816db333891f724"
     },
     {
-      "path": "site/esm-comparison/original.js",
-      "sha256": "510957b346960db6b6d2a0ebfb89f430c24d9eb987326487bac92f7f179161b6"
+      "path": "site/source-build.json",
+      "sha256": "bc422143e90793cced944f69ab39759d13c0724e3525d844ac63c2a42af490d8"
+    },
+    {
+      "path": "site/comparison.json",
+      "sha256": "3a3eb220ed6b056bf8241891a5861a4f3db7789aa8f226bb6c09a01090640655"
     }
-  ]
+  ],
+  "sourceBuildReceipt": "comparison/source-build/result.json",
+  "currentMeasurement": {
+    "compiler": {
+      "commit": "4dc4e3337d9ffd758d65e3852682d6e13d9331c1",
+      "sha256": "0616048498eb9eb2e4bd75b39e8e6a083733ada647e16108edfee30ad183beeb"
+    },
+    "source": {
+      "commit": "cb2550734ffc39296c9fb87d77665ec4ea06eba0"
+    },
+    "upstream": {
+      "repository": "https://github.com/remarkjs/remark-gfm.git",
+      "commit": "109972e8a773bf5dac1d6d2da0776557f36971aa",
+      "package": "remark-gfm",
+      "version": "4.0.1",
+      "directory": "."
+    },
+    "compatibility": "Runtime checks: 19/19 pass."
+  }
 }
