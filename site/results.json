@@ -30,49 +30,61 @@
       "gzip9": 20873,
       "brotli11": 18227,
       "note": "esbuild bundle of the published package plus runtime deps",
-      "diagnostic": false
+      "diagnostic": false,
+      "measuredAt": "2026-09-10T13:59:45Z",
+      "artifactSha256": "4d6d19e6cea8223fc611dde254670b92167c96d2201a104d3dcd7b32d8cde267"
     },
     {
       "id": "official-terser-mangle",
-      "name": "Official · Terser mangle on",
-      "raw": 42094,
-      "gzip9": 12387,
-      "brotli11": 11149,
+      "name": "Official \u00b7 Terser mangle on",
+      "raw": 42089,
+      "gzip9": 12384,
+      "brotli11": 11161,
       "note": "Terser compress of that graph, mangle: true",
-      "baseline": true
+      "baseline": true,
+      "measuredAt": "2026-09-10T13:59:45Z",
+      "artifactSha256": "510957b346960db6b6d2a0ebfb89f430c24d9eb987326487bac92f7f179161b6"
     },
     {
       "id": "official-terser-nomangle",
-      "name": "Official · Terser mangle off",
-      "raw": 66946,
-      "gzip9": 14996,
+      "name": "Official \u00b7 Terser mangle off",
+      "raw": 66941,
+      "gzip9": 14997,
       "brotli11": 13621,
-      "note": "Terser compress of that graph, mangle: false"
+      "note": "Terser compress of that graph, mangle: false",
+      "measuredAt": "2026-09-10T13:59:45Z",
+      "artifactSha256": "3cf502351b687b3a58920df04a0aaedb7299c6843ba6338dcb5b13e06fc622fa"
     },
     {
       "id": "official-esbuild",
-      "name": "Official · esbuild minify",
+      "name": "Official \u00b7 esbuild minify",
       "raw": 42980,
       "gzip9": 13119,
       "brotli11": 11830,
-      "note": "esbuild minify of that graph"
+      "note": "esbuild minify of that graph",
+      "measuredAt": "2026-09-10T13:59:45Z",
+      "artifactSha256": "9cad4ed92faf7879d21a282f5e955cadb41b29b7067a1e54a17aed57e6942569"
     },
     {
       "id": "itslil",
-      "name": "@itslil/remark-gfm · library",
-      "raw": 32996,
-      "gzip9": 11850,
-      "brotli11": 10559,
-      "note": "LilScript js-module, extern_fields true. The npm ESM.",
-      "primary": true
+      "name": "@itslil/remark-gfm \u00b7 library",
+      "raw": 33051,
+      "gzip9": 11488,
+      "brotli11": 10263,
+      "note": "Fresh packaged ESM, rebuilt with compiler 63c2896a71.",
+      "primary": true,
+      "measuredAt": "2026-09-10T13:59:45Z",
+      "artifactSha256": "a8d896ef1f50bcbb93d9410b633d11f2bf445b3035dfe8f33816db333891f724"
     },
     {
       "id": "itslil-closed",
-      "name": "@itslil/remark-gfm · closed",
-      "raw": 34779,
-      "gzip9": 12930,
-      "brotli11": 11509,
-      "note": "Same source, extern_fields false; diagnostic only"
+      "name": "@itslil/remark-gfm \u00b7 closed",
+      "raw": 34319,
+      "gzip9": 12221,
+      "brotli11": 10849,
+      "note": "Same source, extern_fields false; diagnostic only",
+      "measuredAt": "2026-09-10T13:59:45Z",
+      "artifactSha256": "99aaf5844698408dc84cbaa307b5ac818eac1504129bc0a66297b805ade61d8f"
     }
   ],
   "throughput": [
@@ -86,5 +98,8 @@
       "name": "@itslil/remark-gfm",
       "documentMs": 0.008042000001296401
     }
-  ]
+  ],
+  "sizeMeasuredAt": "2026-09-10T13:59:45Z",
+  "buildAudit": "./build-audit.json",
+  "runtimeEvidenceStatus": "Historical; runtime throughput was not republished as a measurement of this compiler."
 }

@@ -1,5 +1,9 @@
 # @itslil/remark-gfm
 
+<!-- current-build-audit -->
+**Build audit, 2026-09-10:** [verified; compiler, machine, build times, version gaps and behavior checks](https://yeargun.github.io/remark-gfmlil/#build-audit). The [JSON receipt](site/build-audit.json) records the current comparison; older benchmark prose retains its original scope.
+
+
 Official [`remark-gfm@4.0.1`](https://github.com/remarkjs/remark-gfm) algorithms rewritten in LilScript — a real micromark/mdast extension plugin. Full test suite 19/19. Not affiliated with upstream.
 
 **Site:** [yeargun.github.io/remark-gfmlil/](https://yeargun.github.io/remark-gfmlil/)
