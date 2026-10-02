@@ -59,7 +59,13 @@
     "NOTICE.md",
     "README.md"
   ],
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/remark-gfm.cjs",
+    "./dist/remark-gfm.closed.js",
+    "./dist/remark-gfm.esm.js",
+    "./dist/remark-gfm.raw.js",
+    "./dist/remark-gfm.umd.js"
+  ],
   "engines": {
     "node": ">=18"
   },
