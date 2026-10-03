@@ -1,0 +1,5 @@
+
+> @itslil/remark-gfm@4.0.3 check:pack
+> node scripts/check-pack.mjs
+
+npm pack: 49 files, 74613 bytes packed, 291827 bytes unpacked

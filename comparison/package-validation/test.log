@@ -1,0 +1,135 @@
+
+> @itslil/remark-gfm@4.0.3 check:types
+> tsc --noEmit --strict --exactOptionalPropertyTypes --module NodeNext --moduleResolution NodeNext --target ES2022 test/types.test.ts
+
+TAP version 13
+# Subtest: @itslil/remark-gfm
+    # Subtest: exposes the upstream public API
+    ok 1 - exposes the upstream public API
+      ---
+      duration_ms: 1.386378
+      ...
+    # Subtest: registers micromark and mdast extensions
+    ok 2 - registers micromark and mdast extensions
+      ---
+      duration_ms: 1.204798
+      ...
+    # Subtest: forwards options into the GFM combiners
+    ok 3 - forwards options into the GFM combiners
+      ---
+      duration_ms: 0.289913
+      ...
+    # Subtest: works through processor.use(plugin, options)
+    ok 4 - works through processor.use(plugin, options)
+      ---
+      duration_ms: 0.295273
+      ...
+    # Subtest: does not start an email autolink after escaped atext
+    ok 5 - does not start an email autolink after escaped atext
+      ---
+      duration_ms: 9.842252
+      ...
+    1..5
+ok 1 - @itslil/remark-gfm
+  ---
+  duration_ms: 14.440418
+  type: 'suite'
+  ...
+# Subtest: @itslil/remark-gfm closed lane
+    # Subtest: ships a closed artifact whose exports stay callable
+    ok 1 - ships a closed artifact whose exports stay callable
+      ---
+      duration_ms: 8.589615
+      ...
+    1..1
+ok 2 - @itslil/remark-gfm closed lane
+  ---
+  duration_ms: 9.86763
+  type: 'suite'
+  ...
+# Subtest: remarkGfm
+    # Subtest: should expose the public api
+    ok 1 - should expose the public api
+      ---
+      duration_ms: 1.508757
+      ...
+    # Subtest: should not throw if not passed options
+    ok 2 - should not throw if not passed options
+      ---
+      duration_ms: 1.181584
+      ...
+    1..2
+ok 3 - remarkGfm
+  ---
+  duration_ms: 3.841749
+  ...
+# Subtest: fixtures
+    # Subtest: autolink-literal
+    ok 1 - autolink-literal
+      ---
+      duration_ms: 38.358025
+      ...
+    # Subtest: strikethrough-default
+    ok 2 - strikethrough-default
+      ---
+      duration_ms: 4.529988
+      ...
+    # Subtest: strikethrough-not-one
+    ok 3 - strikethrough-not-one
+      ---
+      duration_ms: 3.808015
+      ...
+    # Subtest: table
+    ok 4 - table
+      ---
+      duration_ms: 6.249179
+      ...
+    # Subtest: table-no-align
+    ok 5 - table-no-align
+      ---
+      duration_ms: 4.741915
+      ...
+    # Subtest: table-no-padding
+    ok 6 - table-no-padding
+      ---
+      duration_ms: 3.877085
+      ...
+    # Subtest: table-string-length
+    ok 7 - table-string-length
+      ---
+      duration_ms: 16.58096
+      ...
+    # Subtest: tasklist
+    ok 8 - tasklist
+      ---
+      duration_ms: 5.956982
+      ...
+    1..8
+ok 4 - fixtures
+  ---
+  duration_ms: 90.392487
+  ...
+# Subtest: three independently targeted builds have current artifact and config hashes
+ok 5 - three independently targeted builds have current artifact and config hashes
+  ---
+  duration_ms: 4.153313
+  ...
+# Subtest: public comparison describes current versus original and distinguishes build stages
+ok 6 - public comparison describes current versus original and distinguishes build stages
+  ---
+  duration_ms: 0.563526
+  ...
+# Subtest: built Pages artifact contains the current data and measured downloads
+ok 7 - built Pages artifact contains the current data and measured downloads
+  ---
+  duration_ms: 0.762749
+  ...
+1..7
+# tests 21
+# suites 2
+# pass 21
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 512.009885
