@@ -1,0 +1,246 @@
+{
+  "schemaVersion": 1,
+  "package": "@itslil/remark-gfm",
+  "version": "4.0.3",
+  "checkedAt": "2026-10-03T13:57:32.933382+00:00",
+  "compilerSha256": "8ff44fabb92c949e68240ce6541038fd52e2f3c04d1a9ac470031e4238541c3a",
+  "buildReport": "./comparison/package-build-report.json",
+  "packageBuildSeconds": 19.87,
+  "validation": {
+    "ok": true,
+    "checks": [
+      {
+        "suite": "test",
+        "command": [
+          "bash",
+          "-c",
+          "npm run check:types && node --test-concurrency=1 --test test/*.test.mjs test/official/index.js"
+        ],
+        "returncode": 0,
+        "log": "./comparison/package-validation/test.log",
+        "logSha256": "a261ef96f91fa4c55fd9f6e90abe699fd859bc6095c271b96d49ea04cb1742f9"
+      },
+      {
+        "suite": "pack",
+        "command": [
+          "npm",
+          "run",
+          "check:pack"
+        ],
+        "returncode": 0,
+        "log": "./comparison/package-validation/pack.log",
+        "logSha256": "3199415b8f24006174ef50ef24037270d7e7b4eb56cf20cc1a031aa4dd950181"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "path": "src/core/blank-line.lil",
+      "sha256": "859685e5206681039331d5dd8a114b81e79347e83737dec3b73c3a64f9a8640c"
+    },
+    {
+      "path": "src/entry.lil",
+      "sha256": "f5d79eb4eb8456bca47f5dbf69801347974c9924f8b2a3dbe0c5a061d25dd2f4"
+    },
+    {
+      "path": "src/factory-space.lil",
+      "sha256": "3fa3f8670f1af832e7ea4501b9c91a86117a1d54e4387849923d181d1d6e04d0"
+    },
+    {
+      "path": "src/host.lil",
+      "sha256": "f36a922f18aa2f69bcc655dd45d7c314482fb9875111bc0a5243bdf8ed58a0fc"
+    },
+    {
+      "path": "src/mdast/ccount.lil",
+      "sha256": "a33a87df17a73cbf794875a623c1914ca924c96ff2b44fc529635987a63419a0"
+    },
+    {
+      "path": "src/mdast/find-and-replace.lil",
+      "sha256": "a7a78735c36a1ca4c81ce3231cb4cf146e5ff5b3c488c8dab8de2f004d72ec5a"
+    },
+    {
+      "path": "src/mdast/gfm-autolink-literal.lil",
+      "sha256": "584ce88ecb4579c0e8d494e4cb35c7046f276691678414fb627ce431fc3f079d"
+    },
+    {
+      "path": "src/mdast/gfm-footnote.lil",
+      "sha256": "d35f018de1ac7ce856efb15cb1b6d4af0ae5f369d47809c69b362c3e93d7685e"
+    },
+    {
+      "path": "src/mdast/gfm-strikethrough.lil",
+      "sha256": "fa3d2218d34dd52ffb247b0ac3e7d7479744f15a3e53988dbacb0d27b4f0f6a0"
+    },
+    {
+      "path": "src/mdast/gfm-table.lil",
+      "sha256": "ce0a17a132fbd412d8dedbc7600fb5da9ff5bdfaacd85a515adcfea03c496e1b"
+    },
+    {
+      "path": "src/mdast/gfm-task-list-item.lil",
+      "sha256": "6fd33bdd3ca13e367545ee40948bcee8ce4422518771eb5d31128366bab52ae6"
+    },
+    {
+      "path": "src/mdast/gfm.lil",
+      "sha256": "533604d99dd5cab3ef2251e7e6d61c3cf7c43e47c0b1a2110e61c56c42c79ddd"
+    },
+    {
+      "path": "src/mdast/is.lil",
+      "sha256": "165265b67c51f01260bb89af2b320d5c36d6f43315b746c62a5ab0e337b9178e"
+    },
+    {
+      "path": "src/mdast/markdown-table.lil",
+      "sha256": "6b1c2b73fe78ebc18a88d90d098256588a13f583c43cc757e024509adb521b86"
+    },
+    {
+      "path": "src/mdast/visit-parents.lil",
+      "sha256": "0968ec59636ae84fb60bcee89f9330c0a21e31d3f8eebfd4b7b36df745680a98"
+    },
+    {
+      "path": "src/micromark/gfm-autolink-literal.lil",
+      "sha256": "7a66da5d1c337292e1e85be60c9146067450e30575d3a78ec670cf381d23bab8"
+    },
+    {
+      "path": "src/micromark/gfm-footnote.lil",
+      "sha256": "5e8b6abf8589808f4ccef8e10f2635a14be9cb3dbe0ca71a325a093c172b3d5f"
+    },
+    {
+      "path": "src/micromark/gfm-strikethrough.lil",
+      "sha256": "5f4a07e0738fba51f857972f994705607052c81fc12ce26155f5588493184c4f"
+    },
+    {
+      "path": "src/micromark/gfm-table-edit-map.lil",
+      "sha256": "ce500766696fcd654cf9ac356557a8d3b2b3bebe586fbc22e3eba7488bceb5c2"
+    },
+    {
+      "path": "src/micromark/gfm-table-infer.lil",
+      "sha256": "99182245d1ce1c83fc1142a5e7c38779c863a0761beed284127fcd1624508f52"
+    },
+    {
+      "path": "src/micromark/gfm-table.lil",
+      "sha256": "ad8982816941180789caff0aaa2542e7577f2b02e03bbcebafc01f5064b66c1b"
+    },
+    {
+      "path": "src/micromark/gfm-tagfilter.lil",
+      "sha256": "c2d88463c7a261d2f89d008b6bc612835e0281c0c0da63a37e0b781cf3dee293"
+    },
+    {
+      "path": "src/micromark/gfm-task-list-item.lil",
+      "sha256": "2da61f8118de48b8990048e5d67f0ca5798c3dda67ea6b38f7fb437cc78104ca"
+    },
+    {
+      "path": "src/micromark/gfm.lil",
+      "sha256": "c4479feb9a18b63402d714e1f2a02c3ffd76c4d18dfa7c26fa1d861299ea32aa"
+    },
+    {
+      "path": "src/symbol/codes.lil",
+      "sha256": "51ab7cab37e5c592ad9164bae1ffef43e6efaddd38c54fe04dfdf9fe94afe215"
+    },
+    {
+      "path": "src/symbol/constants.lil",
+      "sha256": "c89476d798ffe1eb1f9843219c41cd1d19849707ceb9fc18d5583b5ae2470188"
+    },
+    {
+      "path": "src/symbol/types.lil",
+      "sha256": "6ae172165319ad71396ca532ec544326d82d9625f8ee46090d02a587e40c1aa8"
+    },
+    {
+      "path": "src/symbol/values.lil",
+      "sha256": "1aabedd9c760c573fd1ea24d07ae9d35d207bbe61a0ecc62985f0953fc73c3e9"
+    },
+    {
+      "path": "src/to-markdown/check-bullet.lil",
+      "sha256": "72784bc8717b2af7f25d825413cec73fdddf39989df8c523aa9648ae53c267c3"
+    },
+    {
+      "path": "src/to-markdown/check-list-item-indent.lil",
+      "sha256": "2d8eb9c3b8a22f0a6bfeb0fd6025404c0e72b4e45edde92c0c372751bc5e3432"
+    },
+    {
+      "path": "src/to-markdown/handle.lil",
+      "sha256": "23b76f66cefe19d8508f98dd9b664508fffdd7f1e26971cac3f7adda40bc480c"
+    },
+    {
+      "path": "src/to-markdown/inline-code.lil",
+      "sha256": "65689f9e28e48296b7838fc25bca08b68ad2af6acd94c00f020ee5f8d5b7e11f"
+    },
+    {
+      "path": "src/to-markdown/list-item.lil",
+      "sha256": "4950edf127b2b47b8283d227c50f6dd256ee9247f4cf4addeb4d0a232e284589"
+    },
+    {
+      "path": "src/types.lil",
+      "sha256": "9d01b9848b5a8898d20480369a7352d321d754e118a26590e46a490daeeba305"
+    },
+    {
+      "path": "src/util-character.lil",
+      "sha256": "18407041e8b94facf94f11d6db035e0e2bfdf4ca57ce0494d35eee471cc9a4df"
+    },
+    {
+      "path": "src/util-chunked.lil",
+      "sha256": "dc63c7d2096496959c0c5317e7375ce7c61d23dd69b129b61b0d9bf79e4045cd"
+    },
+    {
+      "path": "src/util-classify-character.lil",
+      "sha256": "8f193927ef6c0a6ec30125dcfe5f24e70e0d1acb178a0f701a6be61050a9b841"
+    },
+    {
+      "path": "src/util-combine-extensions.lil",
+      "sha256": "fa4f8d208738a1537559c5326196e54baef2a6eeed93241e6e3957e92f137957"
+    },
+    {
+      "path": "src/util-normalize-identifier.lil",
+      "sha256": "9c605bcd8454ea59378864ba8abfb67315008fbdea73f96e9fb09e76594fe20e"
+    },
+    {
+      "path": "src/util-resolve-all.lil",
+      "sha256": "4857aeec8d7eb15053668e81899371cd3bb6d9a23a68740204e9ff818120dfd2"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "dist/.lilscript/closed.json",
+      "bytes": 17629,
+      "sha256": "2050557181d3bd7cd288013c2a197645af68d39785c04c2661e7d13bff2c77ea"
+    },
+    {
+      "path": "dist/.lilscript/public.json",
+      "bytes": 23781,
+      "sha256": "1081eabf2c8245d0ad03dee01659de06777e9677621ae040d9827a9faeef66d1"
+    },
+    {
+      "path": "dist/lilscript.manifest.json",
+      "bytes": 12730,
+      "sha256": "5af896c77338ee998b8150024461feee52aea3d9b02c8156ba8ff5640815d48a"
+    },
+    {
+      "path": "dist/remark-gfm.cjs",
+      "bytes": 32961,
+      "sha256": "a94fa6ba6fa6ae4512b9a4bcbbf9ffb08efe67aed65a15bf6d74d22680b8d3b3"
+    },
+    {
+      "path": "dist/remark-gfm.closed.js",
+      "bytes": 32834,
+      "sha256": "48e03f7bdda0a754e7e2c4d67e6404149941c8894594ba3d5e8340adf14c5c05"
+    },
+    {
+      "path": "dist/remark-gfm.d.ts",
+      "bytes": 360,
+      "sha256": "646c737ce88591090f3285cdc8f665a2f826353e06663f2a9548d740be26aee7"
+    },
+    {
+      "path": "dist/remark-gfm.esm.js",
+      "bytes": 32799,
+      "sha256": "dcadf52e2884a30b74aaf03518377c57f294dedb49cc88a912cb1917841c41a5"
+    },
+    {
+      "path": "dist/remark-gfm.raw.js",
+      "bytes": 32799,
+      "sha256": "dcadf52e2884a30b74aaf03518377c57f294dedb49cc88a912cb1917841c41a5"
+    },
+    {
+      "path": "dist/remark-gfm.umd.js",
+      "bytes": 33036,
+      "sha256": "38702c213281426a192f756e5333452887883efa5295922a34216c60edf34603"
+    }
+  ],
+  "scope": "Checked repository package; independent of npm publication. Main-entry objective comparisons have separate artifacts and timings."
+}
