@@ -1,0 +1,629 @@
+{
+  "compiler": {
+    "baseRevision": "f7d29bd9",
+    "binarySha256": "8ff44fabb92c949e68240ce6541038fd52e2f3c04d1a9ac470031e4238541c3a",
+    "hasLocalSourceChanges": true
+  },
+  "machine": {
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "logicalCpus": 8,
+    "memoryGiB": 15.6,
+    "os": "Linux-7.0.0-1014-azure-x86_64-with-glibc2.39",
+    "node": "v20.19.0"
+  },
+  "lilscript": [
+    {
+      "library": "remark-gfmlil",
+      "objective": "raw",
+      "command": [
+        "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/bin/lilscript",
+        "--config",
+        "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/configs/remark-gfmlil-raw.toml",
+        "--target",
+        "js-module",
+        "--mode",
+        "production",
+        "--jobs",
+        "1",
+        "--out-dir",
+        "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/artifacts/remark-gfmlil/raw",
+        "--explain",
+        "json",
+        "--cache",
+        "off",
+        "--logical-work",
+        "2000000000"
+      ],
+      "wallSeconds": 15.442231886998343,
+      "returncode": 0,
+      "compilerSha256": "8ff44fabb92c949e68240ce6541038fd52e2f3c04d1a9ac470031e4238541c3a",
+      "configSha256": "9bf406e4a68a30832ed2c8357296e1d2d3e9775b62db5e9011b411e9d5cf453b",
+      "measuredAt": "2026-10-02T22:47:30.918043+00:00",
+      "outputSha256": "df4b5a157f704ce62ac53659539cd9629a89a884cb3fff990df8d7148c62a107",
+      "raw": 31262
+    },
+    {
+      "library": "remark-gfmlil",
+      "objective": "gzip",
+      "command": [
+        "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/bin/lilscript",
+        "--config",
+        "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/configs/remark-gfmlil-gzip.toml",
+        "--target",
+        "js-module",
+        "--mode",
+        "production",
+        "--jobs",
+        "1",
+        "--out-dir",
+        "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/artifacts/remark-gfmlil/gzip",
+        "--explain",
+        "json",
+        "--cache",
+        "off",
+        "--logical-work",
+        "2000000000"
+      ],
+      "wallSeconds": 13.489345965997927,
+      "returncode": 0,
+      "compilerSha256": "8ff44fabb92c949e68240ce6541038fd52e2f3c04d1a9ac470031e4238541c3a",
+      "configSha256": "9945d4b16c2be56cc3e5f660a3cd562e4b6e08590286a3fab576e5c7fff3d3e2",
+      "measuredAt": "2026-10-02T22:47:44.416929+00:00",
+      "outputSha256": "995af6c4c6306506c58428395777d9bc6ef0fb7d73834f391636dbdb07712624",
+      "raw": 32771
+    },
+    {
+      "library": "remark-gfmlil",
+      "objective": "brotli",
+      "command": [
+        "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/bin/lilscript",
+        "--config",
+        "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/configs/remark-gfmlil-brotli.toml",
+        "--target",
+        "js-module",
+        "--mode",
+        "production",
+        "--jobs",
+        "1",
+        "--out-dir",
+        "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/artifacts/remark-gfmlil/brotli",
+        "--explain",
+        "json",
+        "--cache",
+        "off",
+        "--logical-work",
+        "2000000000"
+      ],
+      "wallSeconds": 23.357861284002865,
+      "returncode": 0,
+      "compilerSha256": "8ff44fabb92c949e68240ce6541038fd52e2f3c04d1a9ac470031e4238541c3a",
+      "configSha256": "b2c11d9bf1fd70ff7b9178c14f9a8d8d3791d714761d263aaebfc81cb0b4ba80",
+      "measuredAt": "2026-10-02T22:48:07.781491+00:00",
+      "outputSha256": "dcadf52e2884a30b74aaf03518377c57f294dedb49cc88a912cb1917841c41a5",
+      "raw": 32799
+    }
+  ],
+  "upstream": {
+    "name": "remark-gfmlil",
+    "package": "remark-gfm",
+    "version": "4.0.1",
+    "resolveDir": "/home/azureuser/lilscript-rebuild-reports/2026-10-02-optimization/vendor/remark-gfm/package",
+    "output": "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/upstream/remark-gfmlil",
+    "entry": "export {default} from \"/home/azureuser/lilscript-rebuild-reports/2026-10-02-optimization/vendor/remark-gfm/package/index.js\";",
+    "external": [],
+    "sharedExports": [
+      "default"
+    ],
+    "excludedExports": [],
+    "additionalExports": [],
+    "resolution": {
+      "platform": "neutral",
+      "conditions": [
+        "production"
+      ],
+      "mainFields": [
+        "module",
+        "main"
+      ],
+      "target": "es2020",
+      "defines": {
+        "process.env.NODE_ENV": "production"
+      }
+    },
+    "minifiers": [
+      {
+        "tool": "Terser",
+        "version": "5.51.2",
+        "esbuild": "0.28.1",
+        "artifact": "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/upstream/remark-gfmlil/terser.mjs",
+        "sha256": "90b20122eaf0fa7fc4f6dcba00f8b02b044f1d800216c96e307d56c3707d3af0",
+        "raw": 42088,
+        "imports": [],
+        "wallSeconds": 0.7098875339999995,
+        "command": [
+          "/home/azureuser/.nvm/versions/node/v20.19.0/bin/node",
+          "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/upstream.mjs",
+          "child",
+          "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/upstream/remark-gfmlil/job.json",
+          "Terser"
+        ]
+      },
+      {
+        "tool": "esbuild",
+        "version": "0.28.1",
+        "esbuild": "0.28.1",
+        "artifact": "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/upstream/remark-gfmlil/esbuild.mjs",
+        "sha256": "9cad4ed92faf7879d21a282f5e955cadb41b29b7067a1e54a17aed57e6942569",
+        "raw": 42980,
+        "imports": [],
+        "wallSeconds": 0.08644792899999994,
+        "command": [
+          "/home/azureuser/.nvm/versions/node/v20.19.0/bin/node",
+          "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/upstream.mjs",
+          "child",
+          "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/upstream/remark-gfmlil/job.json",
+          "esbuild"
+        ]
+      },
+      {
+        "tool": "Oxc",
+        "version": "via Vite 8.2.1",
+        "esbuild": "0.28.1",
+        "artifact": "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/upstream/remark-gfmlil/oxc.mjs",
+        "sha256": "bed7b0bf0c0f6282ce5792b583920447922edcf626e7dc3be57f2779182bc523",
+        "raw": 41973,
+        "imports": [],
+        "wallSeconds": 0.20307297999999901,
+        "command": [
+          "/home/azureuser/.nvm/versions/node/v20.19.0/bin/node",
+          "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/upstream.mjs",
+          "child",
+          "/home/azureuser/lilscript-rebuild-reports/2026-10-03-pages/upstream/remark-gfmlil/job.json",
+          "Oxc"
+        ]
+      }
+    ]
+  },
+  "sourceInputs": {
+    "root": 0,
+    "entries": [
+      {
+        "name": "index",
+        "module": 0
+      }
+    ],
+    "modules": [
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/entry.lil",
+        "bytes": 1284,
+        "sha256": "f5d79eb4eb8456bca47f5dbf69801347974c9924f8b2a3dbe0c5a061d25dd2f4",
+        "dependencies": [
+          1,
+          2,
+          23
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/host.lil",
+        "bytes": 11101,
+        "sha256": "f36a922f18aa2f69bcc655dd45d7c314482fb9875111bc0a5243bdf8ed58a0fc",
+        "dependencies": [],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/micromark/gfm.lil",
+        "bytes": 972,
+        "sha256": "c4479feb9a18b63402d714e1f2a02c3ffd76c4d18dfa7c26fa1d861299ea32aa",
+        "dependencies": [
+          3,
+          6,
+          10,
+          15,
+          18,
+          21,
+          22
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/util-combine-extensions.lil",
+        "bytes": 2606,
+        "sha256": "fa4f8d208738a1537559c5326196e54baef2a6eeed93241e6e3957e92f137957",
+        "dependencies": [
+          1,
+          4
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/util-chunked.lil",
+        "bytes": 1512,
+        "sha256": "dc63c7d2096496959c0c5317e7375ce7c61d23dd69b129b61b0d9bf79e4045cd",
+        "dependencies": [
+          1,
+          5
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/symbol/constants.lil",
+        "bytes": 2986,
+        "sha256": "c89476d798ffe1eb1f9843219c41cd1d19849707ceb9fc18d5583b5ae2470188",
+        "dependencies": [],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/micromark/gfm-autolink-literal.lil",
+        "bytes": 14524,
+        "sha256": "7a66da5d1c337292e1e85be60c9146067450e30575d3a78ec670cf381d23bab8",
+        "dependencies": [
+          1,
+          7,
+          8,
+          9
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/util-character.lil",
+        "bytes": 2170,
+        "sha256": "18407041e8b94facf94f11d6db035e0e2bfdf4ca57ce0494d35eee471cc9a4df",
+        "dependencies": [
+          1,
+          8
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/symbol/codes.lil",
+        "bytes": 6315,
+        "sha256": "51ab7cab37e5c592ad9164bae1ffef43e6efaddd38c54fe04dfdf9fe94afe215",
+        "dependencies": [
+          1
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/symbol/types.lil",
+        "bytes": 10985,
+        "sha256": "6ae172165319ad71396ca532ec544326d82d9625f8ee46090d02a587e40c1aa8",
+        "dependencies": [],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/micromark/gfm-footnote.lil",
+        "bytes": 11977,
+        "sha256": "5e8b6abf8589808f4ccef8e10f2635a14be9cb3dbe0ca71a325a093c172b3d5f",
+        "dependencies": [
+          1,
+          4,
+          11,
+          7,
+          12,
+          14,
+          8,
+          5,
+          9
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/factory-space.lil",
+        "bytes": 907,
+        "sha256": "3fa3f8670f1af832e7ea4501b9c91a86117a1d54e4387849923d181d1d6e04d0",
+        "dependencies": [
+          1,
+          7
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/util-normalize-identifier.lil",
+        "bytes": 348,
+        "sha256": "9c605bcd8454ea59378864ba8abfb67315008fbdea73f96e9fb09e76594fe20e",
+        "dependencies": [
+          13
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/symbol/values.lil",
+        "bytes": 3599,
+        "sha256": "1aabedd9c760c573fd1ea24d07ae9d35d207bbe61a0ecc62985f0953fc73c3e9",
+        "dependencies": [],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/core/blank-line.lil",
+        "bytes": 908,
+        "sha256": "859685e5206681039331d5dd8a114b81e79347e83737dec3b73c3a64f9a8640c",
+        "dependencies": [
+          1,
+          11,
+          7,
+          9
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/micromark/gfm-strikethrough.lil",
+        "bytes": 6395,
+        "sha256": "5f4a07e0738fba51f857972f994705607052c81fc12ce26155f5588493184c4f",
+        "dependencies": [
+          1,
+          4,
+          16,
+          17,
+          8,
+          5,
+          9
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/util-classify-character.lil",
+        "bytes": 516,
+        "sha256": "8f193927ef6c0a6ec30125dcfe5f24e70e0d1acb178a0f701a6be61050a9b841",
+        "dependencies": [
+          1,
+          7,
+          5
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/util-resolve-all.lil",
+        "bytes": 576,
+        "sha256": "4857aeec8d7eb15053668e81899371cd3bb6d9a23a68740204e9ff818120dfd2",
+        "dependencies": [
+          1
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/micromark/gfm-table.lil",
+        "bytes": 17799,
+        "sha256": "ad8982816941180789caff0aaa2542e7577f2b02e03bbcebafc01f5064b66c1b",
+        "dependencies": [
+          1,
+          11,
+          7,
+          8,
+          5,
+          9,
+          19,
+          20
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/micromark/gfm-table-edit-map.lil",
+        "bytes": 2241,
+        "sha256": "ce500766696fcd654cf9ac356557a8d3b2b3bebe586fbc22e3eba7488bceb5c2",
+        "dependencies": [
+          1
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/micromark/gfm-table-infer.lil",
+        "bytes": 1279,
+        "sha256": "99182245d1ce1c83fc1142a5e7c38779c863a0761beed284127fcd1624508f52",
+        "dependencies": [
+          1
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/micromark/gfm-tagfilter.lil",
+        "bytes": 1216,
+        "sha256": "c2d88463c7a261d2f89d008b6bc612835e0281c0c0da63a37e0b781cf3dee293",
+        "dependencies": [
+          1
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/micromark/gfm-task-list-item.lil",
+        "bytes": 3350,
+        "sha256": "2da61f8118de48b8990048e5d67f0ca5798c3dda67ea6b38f7fb437cc78104ca",
+        "dependencies": [
+          1,
+          11,
+          7,
+          8,
+          9
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/mdast/gfm.lil",
+        "bytes": 1059,
+        "sha256": "533604d99dd5cab3ef2251e7e6d61c3cf7c43e47c0b1a2110e61c56c42c79ddd",
+        "dependencies": [
+          1,
+          24,
+          29,
+          30,
+          31,
+          38
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/mdast/gfm-autolink-literal.lil",
+        "bytes": 7452,
+        "sha256": "584ce88ecb4579c0e8d494e4cb35c7046f276691678414fb627ce431fc3f079d",
+        "dependencies": [
+          1,
+          7,
+          25,
+          26
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/mdast/ccount.lil",
+        "bytes": 376,
+        "sha256": "a33a87df17a73cbf794875a623c1914ca924c96ff2b44fc529635987a63419a0",
+        "dependencies": [
+          1
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/mdast/find-and-replace.lil",
+        "bytes": 5226,
+        "sha256": "a7a78735c36a1ca4c81ce3231cb4cf146e5ff5b3c488c8dab8de2f004d72ec5a",
+        "dependencies": [
+          1,
+          4,
+          27,
+          28
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/mdast/is.lil",
+        "bytes": 400,
+        "sha256": "165265b67c51f01260bb89af2b320d5c36d6f43315b746c62a5ab0e337b9178e",
+        "dependencies": [
+          1
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/mdast/visit-parents.lil",
+        "bytes": 2181,
+        "sha256": "0968ec59636ae84fb60bcee89f9330c0a21e31d3f8eebfd4b7b36df745680a98",
+        "dependencies": [
+          1
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/mdast/gfm-footnote.lil",
+        "bytes": 6314,
+        "sha256": "d35f018de1ac7ce856efb15cb1b6d4af0ae5f369d47809c69b362c3e93d7685e",
+        "dependencies": [
+          1,
+          12
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/mdast/gfm-strikethrough.lil",
+        "bytes": 2150,
+        "sha256": "fa3d2218d34dd52ffb247b0ac3e7d7479744f15a3e53988dbacb0d27b4f0f6a0",
+        "dependencies": [
+          1
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/mdast/gfm-table.lil",
+        "bytes": 7850,
+        "sha256": "ce0a17a132fbd412d8dedbc7600fb5da9ff5bdfaacd85a515adcfea03c496e1b",
+        "dependencies": [
+          1,
+          32,
+          33
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/mdast/markdown-table.lil",
+        "bytes": 6580,
+        "sha256": "6b1c2b73fe78ebc18a88d90d098256588a13f583c43cc757e024509adb521b86",
+        "dependencies": [
+          1
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/to-markdown/handle.lil",
+        "bytes": 185,
+        "sha256": "23b76f66cefe19d8508f98dd9b664508fffdd7f1e26971cac3f7adda40bc480c",
+        "dependencies": [
+          34,
+          35
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/to-markdown/inline-code.lil",
+        "bytes": 1814,
+        "sha256": "65689f9e28e48296b7838fc25bca08b68ad2af6acd94c00f020ee5f8d5b7e11f",
+        "dependencies": [
+          1
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/to-markdown/list-item.lil",
+        "bytes": 2492,
+        "sha256": "4950edf127b2b47b8283d227c50f6dd256ee9247f4cf4addeb4d0a232e284589",
+        "dependencies": [
+          1,
+          36,
+          37
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/to-markdown/check-bullet.lil",
+        "bytes": 423,
+        "sha256": "72784bc8717b2af7f25d825413cec73fdddf39989df8c523aa9648ae53c267c3",
+        "dependencies": [
+          1
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/to-markdown/check-list-item-indent.lil",
+        "bytes": 462,
+        "sha256": "2d8eb9c3b8a22f0a6bfeb0fd6025404c0e72b4e45edde92c0c372751bc5e3432",
+        "dependencies": [
+          1
+        ],
+        "dynamic_dependencies": []
+      },
+      {
+        "path": "/home/azureuser/remark-gfmlil/src/mdast/gfm-task-list-item.lil",
+        "bytes": 4015,
+        "sha256": "6fd33bdd3ca13e367545ee40948bcee8ce4422518771eb5d31128366bab52ae6",
+        "dependencies": [
+          1,
+          33
+        ],
+        "dynamic_dependencies": []
+      }
+    ],
+    "host_modules": [],
+    "host_reserved": []
+  },
+  "validation": {
+    "checks": 36,
+    "objectives": [
+      {
+        "objective": "raw",
+        "checks": 12,
+        "suite": "upstream-derived/API"
+      },
+      {
+        "objective": "gzip",
+        "checks": 12,
+        "suite": "upstream-derived/API"
+      },
+      {
+        "objective": "brotli",
+        "checks": 12,
+        "suite": "upstream-derived/API"
+      }
+    ],
+    "scope": "Main ESM entry; selected corpora and API checks, not all package formats or complete upstream equivalence."
+  },
+  "workLimit": 2000000000,
+  "timingScope": "One sequential fresh-output build per objective/minifier. Upstream timing is ESM bundling and minification, not original-repository source compilation."
+}
